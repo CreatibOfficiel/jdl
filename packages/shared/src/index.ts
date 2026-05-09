@@ -8,6 +8,13 @@ export {
 } from './constants/board';
 export { PAWN_COLOR_IDS, PAWN_COLORS, type PawnColor } from './constants/colors';
 export { AVATAR_EMOJIS } from './constants/emojis';
+export {
+  CASE_TAGS,
+  type CaseTagVector,
+  type DifficultyTargetVector,
+  DIFFICULTY_TARGETS,
+  tagDistance,
+} from './constants/caseTags';
 export type { BoardCase, CaseType, Suit } from './types/case';
 export {
   DIFFICULTY_LEVELS,
