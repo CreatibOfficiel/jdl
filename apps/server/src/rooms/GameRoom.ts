@@ -15,6 +15,7 @@ import { type JoinOptions, JoinOptionsSchema } from '../lib/messages';
 import { BoardCaseSchema } from '../schemas/BoardCaseSchema';
 import { GameState } from '../schemas/GameState';
 import { Player } from '../schemas/Player';
+import type { SipEvent } from '../schemas/SipEvent';
 
 const MAX_CLIENTS = 10;
 const MIN_PLAYERS_TO_START = 2;
@@ -33,6 +34,9 @@ export class GameRoom extends Room<GameState, RoomMetadata> {
   private treasureCases: number[] = [];
   private startedAt: number = 0;
   private persisted: boolean = false;
+  /** Unbounded mirror of every SipEvent emitted (state.sipEvents is capped at 200 for client sync).
+   *  Consumed by persistFinishedGame in Stage A4 so post-game stats remain exact. */
+  readonly allSipEvents: SipEvent[] = [];
 
   override async onCreate(options: CreateOptions): Promise<void> {
     const code = options.code ?? '';

@@ -2,6 +2,7 @@ import { ArraySchema, MapSchema, Schema, type } from '@colyseus/schema';
 import { BoardCaseSchema } from './BoardCaseSchema';
 import { GameEvent } from './GameEvent';
 import { Player } from './Player';
+import { SipEvent } from './SipEvent';
 
 export class GameState extends Schema {
   @type('string') phase: string = 'lobby';
@@ -25,4 +26,6 @@ export class GameState extends Schema {
   @type(['number']) treasuresOpened = new ArraySchema<number>();
   @type('number') railRound: number = 0;
   @type(['string']) railCards = new ArraySchema<string>();
+  @type([SipEvent]) sipEvents = new ArraySchema<SipEvent>();
+  @type('number') sipEventsTotalCount: number = 0;
 }
