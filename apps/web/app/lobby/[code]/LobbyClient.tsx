@@ -125,7 +125,7 @@ export function LobbyClient({ code, initialProfile }: LobbyClientProps) {
     );
   }
 
-  if (!state || !room) {
+  if (!state || !room || !state.players) {
     return (
       <main className="mx-auto max-w-md px-6 py-16">
         <p className="text-zinc-600">Chargement du state…</p>
