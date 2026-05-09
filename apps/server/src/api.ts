@@ -8,6 +8,7 @@ import {
   getTopAthletes,
   getTopDrinkers,
   getTopGivers,
+  getTopPairs,
   getTopWinners,
 } from './db/repositories/stats';
 
@@ -26,6 +27,7 @@ export function createApiApp(): Express {
       givers: getTopGivers(10),
       winners: getTopWinners(10),
       athletes: getTopAthletes(10),
+      pairs: getTopPairs(10),
       recent: getRecentGames(20),
     });
   });

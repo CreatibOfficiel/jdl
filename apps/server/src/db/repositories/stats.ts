@@ -1,4 +1,4 @@
-import { asc, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, isNotNull, sql } from 'drizzle-orm';
 import { db } from '../index';
 import { gamePlayerStats, games, players, sipEvents } from '../schema';
 
@@ -19,6 +19,23 @@ export function getTopAthletes(limit = 10) {
     .select()
     .from(players)
     .orderBy(desc(players.totalEquivalenceUnits))
+    .limit(limit)
+    .all();
+}
+
+/** Aggregate top "duos toxiques" — pairs with the most cumulative sip flow.
+ *  Skips events with empty fromId (auto-drinks) or empty toId (distribute-without-target). */
+export function getTopPairs(limit = 10) {
+  return db
+    .select({
+      fromId: sipEvents.fromId,
+      toId: sipEvents.toId,
+      total: sql<number>`SUM(${sipEvents.count})`.as('total'),
+    })
+    .from(sipEvents)
+    .where(and(isNotNull(sipEvents.fromId), sql`${sipEvents.fromId} != ''`, sql`${sipEvents.toId} != ''`))
+    .groupBy(sipEvents.fromId, sipEvents.toId)
+    .orderBy(desc(sql`total`))
     .limit(limit)
     .all();
 }

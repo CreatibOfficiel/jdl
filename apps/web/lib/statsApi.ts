@@ -43,11 +43,18 @@ export interface SipEventRecord {
   equivalence: string | null;
 }
 
+export interface PairStat {
+  fromId: string;
+  toId: string;
+  total: number;
+}
+
 export interface TopStats {
   drinkers: PlayerStats[];
   givers: PlayerStats[];
   winners: PlayerStats[];
   athletes: PlayerStats[];
+  pairs: PairStat[];
   recent: GameRecord[];
 }
 

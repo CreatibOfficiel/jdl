@@ -62,6 +62,27 @@ export default async function StatsPage() {
         />
       </div>
 
+      {stats.pairs && stats.pairs.length > 0 && (
+        <section className="mt-8 rounded-2xl border border-zinc-200 bg-white p-4">
+          <h2 className="font-semibold text-zinc-700">💞 Duos toxiques</h2>
+          <p className="text-xs text-zinc-500">Plus gros flux de gorgées (donneur → receveur).</p>
+          <ol className="mt-3 space-y-1 text-sm">
+            {stats.pairs.slice(0, 10).map((p, i) => (
+              <li
+                key={`${p.fromId}-${p.toId}`}
+                className="flex items-center justify-between"
+              >
+                <span className="text-zinc-700">
+                  <span className="mr-2 font-bold text-zinc-400">{i + 1}.</span>
+                  {p.fromId} → {p.toId}
+                </span>
+                <span className="font-mono text-zinc-900">{p.total} gorgée(s)</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
       <section className="mt-8">
         <h2 className="text-xl font-bold">Dernières parties</h2>
         <ul className="mt-3 divide-y divide-zinc-200 rounded-2xl border border-zinc-200 bg-white">
