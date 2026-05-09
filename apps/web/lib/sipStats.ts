@@ -56,6 +56,36 @@ export function pairMatrix(events: ReadonlyArray<ClientSipEvent>): Map<string, M
 
 /** Bucketize sips/player over the last `bucketCount` buckets of `bucketMs`.
  *  Returns one row per player with the bucketed counts (oldest → newest). */
+/** Cumulative sips received by each player over time, suitable for a line chart.
+ *  Each series has step-shaped points: when a sip lands, we emit one point right
+ *  before (oldTotal) and one right after (newTotal) at the same ts to keep lines
+ *  monotonically non-decreasing without diagonal slopes. */
+export interface CumulativeSeries {
+  playerId: string;
+  /** Pairs of [tsMs, totalSipsAt(ts)] sorted ascending. */
+  points: ReadonlyArray<[number, number]>;
+}
+
+export function cumulativeSeries(
+  events: ReadonlyArray<ClientSipEvent>,
+  playerIds: ReadonlyArray<string>,
+  now: number = Date.now(),
+): CumulativeSeries[] {
+  const sorted = [...events].sort((a, b) => a.ts - b.ts);
+  const startTs = sorted[0]?.ts ?? now;
+  return playerIds.map((playerId) => {
+    const points: Array<[number, number]> = [[startTs, 0]];
+    let total = 0;
+    for (const e of sorted) {
+      if (e.toId !== playerId) continue;
+      total += e.count;
+      points.push([e.ts, total]);
+    }
+    points.push([now, total]);
+    return { playerId, points };
+  });
+}
+
 export function bucketizeSips(
   events: ReadonlyArray<ClientSipEvent>,
   playerIds: ReadonlyArray<string>,

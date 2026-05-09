@@ -13,9 +13,13 @@ import {
 import Link from 'next/link';
 import { useEffect, useMemo, useRef } from 'react';
 import { Board } from '@/components/board/Board';
+import { ModalEcho } from '@/components/master/ModalEcho';
+import { SipChart } from '@/components/master/SipChart';
 import { useColyseusRoom } from '@/hooks/useColyseusRoom';
+import { useModalEcho } from '@/hooks/useModalEcho';
 import { colyseusStateToBoard } from '@/lib/colyseusToBoard';
-import type { ClientGameEvent, ClientGameState, ClientPlayer } from '@/types/colyseus';
+import { cumulativeSeries } from '@/lib/sipStats';
+import type { ClientGameEvent, ClientGameState, ClientPlayer, ClientSipEvent } from '@/types/colyseus';
 
 const COLOR_BY_ID = new Map(PAWN_COLORS.map((c) => [c.id, c.hex]));
 
@@ -120,6 +124,29 @@ export function MasterClient({ code }: MasterClientProps) {
     events.push(e);
   });
   const recentEvents = events.slice(-12).reverse();
+  const echo = useModalEcho(events);
+
+  const sipEvents = useMemo(() => {
+    const arr: ClientSipEvent[] = [];
+    state.sipEvents.forEach((e) => arr.push(e));
+    return arr;
+  }, [state.sipEvents, state.sipEventsTotalCount]);
+  const series = useMemo(
+    () => cumulativeSeries(sipEvents, players.map((p) => p.id)),
+    [sipEvents, players],
+  );
+  const colorByPlayerId = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const p of players) {
+      m.set(p.id, COLOR_BY_ID.get(p.color) ?? '#888');
+    }
+    return m;
+  }, [players]);
+  const nameByPlayerId = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const p of players) m.set(p.id, p.name);
+    return m;
+  }, [players]);
 
   const difficultyMeta = isDifficultyLevel(state.difficultyLevel)
     ? DIFFICULTY_PRESETS[state.difficultyLevel]
@@ -157,8 +184,14 @@ export function MasterClient({ code }: MasterClientProps) {
         <aside className="flex flex-col gap-4 overflow-hidden">
           <PlayerRoster players={players} currentPlayerId={currentPlayerId} />
           <EventTicker events={recentEvents} />
+          <SipChart
+            series={series}
+            colorByPlayerId={colorByPlayerId}
+            nameByPlayerId={nameByPlayerId}
+          />
         </aside>
       </main>
+      <ModalEcho echo={echo} />
     </ScreenShell>
   );
 }
