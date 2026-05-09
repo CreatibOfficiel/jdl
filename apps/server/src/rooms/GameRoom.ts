@@ -40,6 +40,7 @@ export class GameRoom extends Room<GameState, RoomMetadata> {
   /** Unbounded mirror of every SipEvent emitted (state.sipEvents is capped at 200 for client sync).
    *  Consumed by persistFinishedGame in Stage A4 so post-game stats remain exact. */
   readonly allSipEvents: SipEvent[] = [];
+  difficulty: 'soft' | 'medium' | 'hardcore' = 'medium';
 
   override async onCreate(options: CreateOptions): Promise<void> {
     const code = options.code ?? '';
@@ -58,8 +59,9 @@ export class GameRoom extends Room<GameState, RoomMetadata> {
     this.state.sipsPerCard = cfg.sipsPerCard;
     this.state.witchPotionSips = cfg.witchPotionSips;
     this.state.ptMalusSips = cfg.ptMalusSips;
+    this.difficulty = difficulty;
 
-    const board = generateBoard(code);
+    const board = generateBoard(code, difficulty);
     this.state.thirstZoneStart = board.thirstZone.start;
     this.state.thirstZoneLength = board.thirstZone.length;
     this.treasureCases = [...board.treasureCases];

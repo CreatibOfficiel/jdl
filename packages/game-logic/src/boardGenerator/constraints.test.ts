@@ -91,11 +91,15 @@ describe('validateBoard', () => {
     expect(r.ok).toBe(false);
   });
 
-  it('rejects a board with the wrong number of red_number cases', () => {
+  it('rejects a board with red_number count out of [12,16] tolerance', () => {
     const board = clone(validBoard);
-    const firstRed = board.cases.find((c) => c.type === 'red_number');
-    if (firstRed) {
-      firstRed.type = 'green_number';
+    // Flip 4 reds → greens to push reds below 12 (well outside the difficulty tolerance).
+    let flipped = 0;
+    for (const c of board.cases) {
+      if (c.type === 'red_number' && flipped < 4) {
+        c.type = 'green_number';
+        flipped += 1;
+      }
     }
     const r = validateBoard(board);
     expect(r.ok).toBe(false);

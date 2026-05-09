@@ -191,10 +191,16 @@ export function validateBoard(board: Board): ValidationResult {
   }
 
   // -- Red/green numbers --------------------------------------------------
+  // Tolerance: the difficulty-aware generator may shift ±2 cards between reds/greens/neutrals.
+  // Total reds + greens + neutrals always sums to 40 (63 - 11 specials - 4 cards - 4 portals - 4 = 40).
   const reds = indicesOfType(board.cases, 'red_number');
   const greens = indicesOfType(board.cases, 'green_number');
-  if (reds.length !== 14) errors.push(`expected 14 red_number, got ${reds.length}`);
-  if (greens.length !== 14) errors.push(`expected 14 green_number, got ${greens.length}`);
+  if (reds.length < 12 || reds.length > 16) {
+    errors.push(`red_number count ${reds.length} not in [12,16]`);
+  }
+  if (greens.length < 12 || greens.length > 16) {
+    errors.push(`green_number count ${greens.length} not in [12,16]`);
+  }
 
   for (const c of board.cases) {
     if (c.type === 'red_number' || c.type === 'green_number') {
