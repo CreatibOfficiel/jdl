@@ -11,7 +11,8 @@ import {
   PAWN_COLORS,
 } from '@jeu-soiree/shared';
 import Link from 'next/link';
-import { useEffect, useMemo, useRef } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Board } from '@/components/board/Board';
 import { ModalEcho } from '@/components/master/ModalEcho';
 import { ReactionFountain } from '@/components/master/ReactionFountain';
@@ -44,6 +45,10 @@ export function MasterClient({ code }: MasterClientProps) {
     validCode,
   );
   const reactions = useReactions(room);
+  const [origin, setOrigin] = useState('');
+  useEffect(() => {
+    if (typeof window !== 'undefined') setOrigin(window.location.origin);
+  }, []);
 
   // Keep the TV awake while connected
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
@@ -192,6 +197,20 @@ export function MasterClient({ code }: MasterClientProps) {
             colorByPlayerId={colorByPlayerId}
             nameByPlayerId={nameByPlayerId}
           />
+          {origin && (
+            <section className="rounded-3xl bg-white p-3">
+              <p className="mb-1 text-center text-xs uppercase tracking-wider text-zinc-500">
+                Rejoindre la partie
+              </p>
+              <div className="flex items-center gap-3">
+                <QRCodeSVG value={`${origin}/?join=${state.boardSeed}`} size={96} level="M" />
+                <div>
+                  <p className="font-mono text-lg font-bold text-zinc-900">{state.boardSeed}</p>
+                  <p className="text-xs text-zinc-500">scanne pour rejoindre + installer</p>
+                </div>
+              </div>
+            </section>
+          )}
         </aside>
       </main>
       <ModalEcho echo={echo} />
