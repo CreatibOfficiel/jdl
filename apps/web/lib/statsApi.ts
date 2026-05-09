@@ -91,6 +91,37 @@ export async function fetchGameDetail(gameId: string): Promise<GameDetail | null
   }
 }
 
+export interface PlayerRecentGame {
+  gameId: string;
+  sipsTaken: number;
+  sipsGiven: number;
+  equivalenceUnitsCompleted: number | null;
+  diceRolls: number;
+  finishedPosition: number | null;
+  won: number;
+  seed: string;
+  startedAt: number;
+  endedAt: number | null;
+  playerCount: number;
+}
+
+export interface PlayerProfile {
+  player: PlayerStats;
+  recent: PlayerRecentGame[];
+}
+
+export async function fetchPlayerProfile(playerId: string): Promise<PlayerProfile | null> {
+  try {
+    const res = await fetch(`${resolveBaseUrl()}/api/players/${encodeURIComponent(playerId)}`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as PlayerProfile;
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchGameSipEvents(gameId: string): Promise<SipEventRecord[]> {
   try {
     const res = await fetch(`${resolveBaseUrl()}/api/games/${encodeURIComponent(gameId)}/sips`, {

@@ -4,6 +4,8 @@ import {
   getGameById,
   getGameSipEvents,
   getGameStats,
+  getPlayerById,
+  getPlayerRecentGames,
   getRecentGames,
   getTopAthletes,
   getTopDrinkers,
@@ -53,6 +55,20 @@ export function createApiApp(): Express {
       return;
     }
     res.json({ gameId: id, events: getGameSipEvents(id) });
+  });
+
+  app.get('/api/players/:id', (req, res) => {
+    const id = req.params.id;
+    if (!id) {
+      res.status(400).json({ error: 'Missing id' });
+      return;
+    }
+    const player = getPlayerById(id);
+    if (!player) {
+      res.status(404).json({ error: 'Player not found' });
+      return;
+    }
+    res.json({ player, recent: getPlayerRecentGames(id, 20) });
   });
 
   return app;

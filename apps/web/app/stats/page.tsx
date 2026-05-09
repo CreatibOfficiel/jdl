@@ -137,10 +137,13 @@ function Leaderboard({ title, column, unit, rows }: LeaderboardProps) {
         {rows.length === 0 && <li className="italic text-zinc-400">Pas encore de données.</li>}
         {rows.map((r, i) => (
           <li key={r.id} className="flex items-center justify-between">
-            <span className="text-zinc-700">
+            <Link
+              href={`/profile/${encodeURIComponent(r.id)}`}
+              className="text-zinc-700 hover:underline"
+            >
               <span className="mr-2 font-bold text-zinc-400">{i + 1}.</span>
               {r.name}
-            </span>
+            </Link>
             <span className="font-mono text-zinc-900">{r[column] ?? 0}</span>
           </li>
         ))}

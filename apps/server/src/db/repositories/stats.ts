@@ -23,6 +23,33 @@ export function getTopAthletes(limit = 10) {
     .all();
 }
 
+export function getPlayerById(playerId: string) {
+  return db.select().from(players).where(eq(players.id, playerId)).get();
+}
+
+export function getPlayerRecentGames(playerId: string, limit = 20) {
+  return db
+    .select({
+      gameId: gamePlayerStats.gameId,
+      sipsTaken: gamePlayerStats.sipsTaken,
+      sipsGiven: gamePlayerStats.sipsGiven,
+      equivalenceUnitsCompleted: gamePlayerStats.equivalenceUnitsCompleted,
+      diceRolls: gamePlayerStats.diceRolls,
+      finishedPosition: gamePlayerStats.finishedPosition,
+      won: gamePlayerStats.won,
+      seed: games.seed,
+      startedAt: games.startedAt,
+      endedAt: games.endedAt,
+      playerCount: games.playerCount,
+    })
+    .from(gamePlayerStats)
+    .innerJoin(games, eq(gamePlayerStats.gameId, games.id))
+    .where(eq(gamePlayerStats.playerId, playerId))
+    .orderBy(desc(games.startedAt))
+    .limit(limit)
+    .all();
+}
+
 /** Aggregate top "duos toxiques" — pairs with the most cumulative sip flow.
  *  Skips events with empty fromId (auto-drinks) or empty toId (distribute-without-target). */
 export function getTopPairs(limit = 10) {
