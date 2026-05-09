@@ -11,14 +11,17 @@ export interface SafetyCaps {
   maxSipsPer10Min: number;
   /** A 💧 hydration prompt is pushed into the EventLog every N turns (global, not per-player). */
   hydrationEveryNTurns: number;
+  /** After this many consecutive cap triggers in the same window, auto-swap drink-pref players to
+   *  the equivalence fallback (pushups) for the rest of the window. Reset on window decay. */
+  autoSwapAfterCaps: number;
 }
 
 /** ~4 sips/10min = ~1 drink/10min = caps "worst-case" pace ≈ 6 drinks/h, well above WHO low-risk
  *  but mirrors the NIAAA "binge" pace at hardcore. Soft halves it; hardcore approaches it. */
 export const SAFETY_BY_DIFFICULTY: Record<DifficultyLevel, SafetyCaps> = {
-  soft: { maxSipsPer10Min: 4, hydrationEveryNTurns: 4 },
-  medium: { maxSipsPer10Min: 6, hydrationEveryNTurns: 6 },
-  hardcore: { maxSipsPer10Min: 8, hydrationEveryNTurns: 8 },
+  soft: { maxSipsPer10Min: 4, hydrationEveryNTurns: 4, autoSwapAfterCaps: 2 },
+  medium: { maxSipsPer10Min: 6, hydrationEveryNTurns: 6, autoSwapAfterCaps: 2 },
+  hardcore: { maxSipsPer10Min: 8, hydrationEveryNTurns: 8, autoSwapAfterCaps: 3 },
 };
 
 export const SAFETY_WINDOW_MS = 10 * 60 * 1000;

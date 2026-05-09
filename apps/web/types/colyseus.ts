@@ -23,6 +23,8 @@ export interface ClientPlayer {
   sipsAbsorbedRecent: number;
   recentWindowStart: number;
   capsTriggered: number;
+  consecutiveCaps: number;
+  autoSwapsTriggered: number;
 }
 
 export interface ClientSipEvent {

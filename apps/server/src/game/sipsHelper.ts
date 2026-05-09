@@ -13,39 +13,115 @@ import { pushEvent } from './eventLog';
 
 const SIP_EVENTS_CAP = 200;
 
-/** Tumbling-window decay: if the last window opened > SAFETY_WINDOW_MS ago, reset the counter. */
+/** Per-source cap policy. `halve` reduces by 50% (floor 1); `swap` forces an equivalence
+ *  override even for drink-pref players; `skip` bypasses the cap entirely (for already-handled
+ *  upstream sources like bromance ricochet). Sources not in this map fall back to 'halve'. */
+type CapPolicy = 'halve' | 'swap' | 'skip';
+
+const CAP_POLICY_BY_SOURCE: Record<string, CapPolicy> = {
+  bromance_drink: 'skip', // already-capped upstream when the originator drank
+  // High-intensity sources auto-swap to equivalence on cap (witch potion, pt malus, rail loss):
+  witch_potion: 'swap',
+  pt_malus: 'swap',
+  rail_drink: 'swap',
+  // Routine card sips: halve.
+  red_drink: 'halve',
+  card_mismatch: 'halve',
+  pill_red: 'halve',
+  pill_blue: 'halve',
+};
+
+/** Default fallback equivalence when an auto-swap fires on a drink-pref player. */
+const FALLBACK_EQUIVALENCE: EquivalenceKind = 'pushups';
+
+interface CapResult {
+  sips: number;
+  /** When true, applySipToPlayer routes through the equivalence path even if pref==='drinks'. */
+  forceEquivalence: boolean;
+}
+
+/** Tumbling-window decay: if the last window opened > SAFETY_WINDOW_MS ago, reset counter
+ *  AND consecutiveCaps so a fresh window starts the auto-swap clock from zero. */
 function decayWindow(player: Player, now: number): void {
   if (now - player.recentWindowStart > SAFETY_WINDOW_MS) {
     player.sipsAbsorbedRecent = 0;
     player.recentWindowStart = now;
+    player.consecutiveCaps = 0;
   }
 }
 
-/** Returns the (possibly reduced) sip count after applying the per-difficulty soft cap.
- *  When the cap fires, the EventLog gets a non-shaming "déjà bu beaucoup" notice and the
- *  Player.capsTriggered counter is bumped. Bromance ricochets and bromance_drink sources are
- *  not capped recursively (the original sip already passed through the cap). */
-function applySoftCap(room: GameRoom, player: Player, sips: number, source: string): number {
-  if (source === 'bromance_drink') return sips; // already-capped upstream
+/** Apply the per-difficulty soft cap with per-source dispatch. Returns the (possibly reduced)
+ *  sip count plus a flag forcing equivalence-routing when auto-swap fires.
+ *
+ *  Auto-swap rule (S2): once a player has triggered the cap `autoSwapAfterCaps` times in the
+ *  same window, every further capped sip is forced through equivalence — even if the player
+ *  picked 'drinks'. They get a public-health-grade brake without needing host intervention. */
+function applySoftCap(room: GameRoom, player: Player, sips: number, source: string): CapResult {
+  const policy: CapPolicy = CAP_POLICY_BY_SOURCE[source] ?? 'halve';
+  if (policy === 'skip') return { sips, forceEquivalence: false };
+
   const level = isDifficultyLevel(room.state.difficultyLevel) ? room.state.difficultyLevel : 'medium';
   const caps = SAFETY_BY_DIFFICULTY[level];
   const now = Date.now();
   decayWindow(player, now);
   const projected = player.sipsAbsorbedRecent + sips;
   if (projected <= caps.maxSipsPer10Min) {
-    return sips;
+    return { sips, forceEquivalence: false };
   }
-  // Halve (floor to at least 1). The "absorbed" counter still bumps by the REDUCED amount so
-  // a long string of capped sips doesn't ratchet caps to zero.
-  const reduced = Math.max(1, Math.floor(sips / 2));
+
+  // Cap is firing.
   player.capsTriggered += 1;
+  player.consecutiveCaps += 1;
+  const shouldAutoSwap = player.consecutiveCaps >= caps.autoSwapAfterCaps;
+
+  // Per-source policy + auto-swap escalation:
+  // - 'swap' source → always forceEquivalence
+  // - other sources → halve normally; if consecutive caps trigger auto-swap, ALSO forceEquivalence
+  const forceEquivalence = policy === 'swap' || shouldAutoSwap;
+
+  if (forceEquivalence) {
+    // Don't halve when forcing equivalence — the player is doing physical reps anyway.
+    if (shouldAutoSwap) {
+      player.autoSwapsTriggered += 1;
+      pushEvent(room.state, {
+        playerId: player.id,
+        kind: 'safety_auto_swap',
+        text: `🛑 ${player.name} a beaucoup bu — son prochain effort passe en équivalence sport`,
+        importance: 'high',
+      });
+    } else {
+      pushEvent(room.state, {
+        playerId: player.id,
+        kind: 'safety_swap_source',
+        text: `⚠️ ${player.name} déjà bien servi — ce ${labelForSource(source)} part en équivalence sport`,
+        importance: 'high',
+      });
+    }
+    return { sips, forceEquivalence: true };
+  }
+
+  // Plain halve path.
+  const reduced = Math.max(1, Math.floor(sips / 2));
   pushEvent(room.state, {
     playerId: player.id,
     kind: 'safety_soft_cap',
     text: `⚠️ ${player.name} a déjà bu beaucoup ces 10 dernières minutes — sip réduit (${sips}→${reduced})`,
     importance: 'high',
   });
-  return reduced;
+  return { sips: reduced, forceEquivalence: false };
+}
+
+function labelForSource(source: string): string {
+  switch (source) {
+    case 'witch_potion':
+      return 'potion sorcière';
+    case 'pt_malus':
+      return 'Pt malus';
+    case 'rail_drink':
+      return 'rail de bus';
+    default:
+      return source;
+  }
 }
 
 interface RecordSipArgs {
@@ -85,8 +161,8 @@ function resolvePref(player: Player): EquivalenceKind {
 }
 
 /** Apply N sips to a single player, respecting their equivalence preference + GameState toggle.
- *  Pushes the appropriate EventLog (drink / equivalence task / sit-out), records the SipEvent,
- *  and bumps the right counters (sipsTaken / equivalenceUnitsCompleted). */
+ *  When a soft cap fires with `forceEquivalence`, drink-pref players are routed through the
+ *  fallback equivalence (pushups) for THIS sip only — their saved preference is unchanged. */
 function applySipToPlayer(
   room: GameRoom,
   player: Player,
@@ -95,10 +171,16 @@ function applySipToPlayer(
   fallbackEmoji: string,
   note: string,
 ): void {
-  const sips = applySoftCap(room, player, rawSips, kind);
+  const cap = applySoftCap(room, player, rawSips, kind);
+  const sips = cap.sips;
+  const savedPref = resolvePref(player);
+  // Effective pref for THIS sip event. Drink players get force-swapped to FALLBACK_EQUIVALENCE
+  // when the cap engine asked for it; non-drink prefs honour their existing pref.
+  const pref: EquivalenceKind =
+    cap.forceEquivalence && savedPref === 'drinks' ? FALLBACK_EQUIVALENCE : savedPref;
+
   // Track absorbed sips against the running window AFTER the cap so the next call sees the
   // (possibly reduced) amount. Sit-out players don't bump (no actual consumption).
-  const pref = resolvePref(player);
   if (pref !== 'sit_out') {
     const now = Date.now();
     decayWindow(player, now);

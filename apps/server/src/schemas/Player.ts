@@ -30,4 +30,8 @@ export class Player extends Schema {
   @type('number') recentWindowStart: number = 0;
   /** How many times this player triggered the soft cap during the game. */
   @type('number') capsTriggered: number = 0;
+  /** Consecutive cap triggers within the active window. Reset on window decay. Drives auto-swap-to-equivalence when ≥ autoSwapAfterCaps. */
+  @type('number') consecutiveCaps: number = 0;
+  /** How many auto-swaps this player triggered (cap → equivalence override). Surface in post-game safety panel. */
+  @type('number') autoSwapsTriggered: number = 0;
 }
