@@ -13,6 +13,7 @@ import { GameSkeleton } from '@/components/game/GameSkeleton';
 import { Inventory } from '@/components/game/Inventory';
 import { MuteToggle } from '@/components/game/MuteToggle';
 import { PlayersBar } from '@/components/game/PlayersBar';
+import { ReactionBar } from '@/components/game/ReactionBar';
 import { StatsPanel } from '@/components/game/StatsPanel';
 import { BromanceModal } from '@/components/modals/BromanceModal';
 import { EquivalenceTaskModal } from '@/components/modals/EquivalenceTaskModal';
@@ -296,6 +297,8 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
             </h2>
             <EventLog events={state.eventLog} />
           </section>
+
+          <ReactionBar room={room} />
         </aside>
       </div>
 

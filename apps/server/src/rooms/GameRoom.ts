@@ -43,6 +43,8 @@ export class GameRoom extends Room<GameState, RoomMetadata> {
   difficulty: 'soft' | 'medium' | 'hardcore' = 'medium';
   /** Counter incremented on every advanceTurn; drives hydration cadence. */
   totalTurnCount: number = 0;
+  /** Per-client throttle for the react message (1 emoji per second per client). */
+  private readonly lastReactionAt = new Map<string, number>();
 
   override async onCreate(options: CreateOptions): Promise<void> {
     const code = options.code ?? '';
@@ -100,6 +102,21 @@ export class GameRoom extends Room<GameState, RoomMetadata> {
       this.handleHostSetCeiling(client, message),
     );
     this.onMessage('host_ack_checklist', (client) => this.handleAckChecklist(client));
+    this.onMessage('react', (client, message: { emoji?: string }) =>
+      this.handleReact(client, message),
+    );
+  }
+
+  private handleReact(client: Client, message: { emoji?: string }): void {
+    const ALLOWED = ['👍', '🔥', '😱', '🤣', '😴', '💀', '👏', '🍻'];
+    const emoji = message.emoji;
+    if (!emoji || !ALLOWED.includes(emoji)) return;
+    // Throttle: drop if same client sent in the last 1s.
+    const now = Date.now();
+    const last = this.lastReactionAt.get(client.sessionId) ?? 0;
+    if (now - last < 1000) return;
+    this.lastReactionAt.set(client.sessionId, now);
+    this.broadcast('reaction', { from: client.sessionId, emoji, ts: now });
   }
 
   private handleExit(client: Client): void {

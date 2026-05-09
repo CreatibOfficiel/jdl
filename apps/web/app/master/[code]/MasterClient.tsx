@@ -14,9 +14,11 @@ import Link from 'next/link';
 import { useEffect, useMemo, useRef } from 'react';
 import { Board } from '@/components/board/Board';
 import { ModalEcho } from '@/components/master/ModalEcho';
+import { ReactionFountain } from '@/components/master/ReactionFountain';
 import { SipChart } from '@/components/master/SipChart';
 import { useColyseusRoom } from '@/hooks/useColyseusRoom';
 import { useModalEcho } from '@/hooks/useModalEcho';
+import { useReactions } from '@/hooks/useReactions';
 import { colyseusStateToBoard } from '@/lib/colyseusToBoard';
 import { cumulativeSeries } from '@/lib/sipStats';
 import type { ClientGameEvent, ClientGameState, ClientPlayer, ClientSipEvent } from '@/types/colyseus';
@@ -36,11 +38,12 @@ export function MasterClient({ code }: MasterClientProps) {
     [normalized],
   );
 
-  const { state, status, error } = useColyseusRoom<ClientGameState>(
+  const { state, status, error, room } = useColyseusRoom<ClientGameState>(
     'game_room',
     options,
     validCode,
   );
+  const reactions = useReactions(room);
 
   // Keep the TV awake while connected
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
@@ -192,6 +195,7 @@ export function MasterClient({ code }: MasterClientProps) {
         </aside>
       </main>
       <ModalEcho echo={echo} />
+      <ReactionFountain reactions={reactions} />
     </ScreenShell>
   );
 }
