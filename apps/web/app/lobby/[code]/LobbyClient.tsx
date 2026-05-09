@@ -25,6 +25,7 @@ interface LobbyClientProps {
     color?: string;
     emoji?: string;
     equivalencePreference?: string;
+    equivalencePerSource?: string;
     /** Only honoured when this client is the room creator. */
     difficulty?: string;
   };
@@ -57,6 +58,7 @@ export function LobbyClient({ code, initialProfile }: LobbyClientProps) {
         equivalencePreference: initialProfile.equivalencePreference ?? 'drinks',
       };
       if (initialProfile.difficulty) base.difficulty = initialProfile.difficulty;
+      if (initialProfile.equivalencePerSource) base.equivalencePerSource = initialProfile.equivalencePerSource;
       return base;
     },
     [
@@ -67,6 +69,7 @@ export function LobbyClient({ code, initialProfile }: LobbyClientProps) {
       initialProfile.emoji,
       initialProfile.equivalencePreference,
       initialProfile.difficulty,
+      initialProfile.equivalencePerSource,
     ],
   );
 

@@ -35,6 +35,8 @@ export function JoinForm() {
   const [color, setColor] = useState<string>(FALLBACK_COLOR);
   const [emoji, setEmoji] = useState<string>(FALLBACK_EMOJI);
   const [equivalencePreference, setEquivalencePreference] = useState<EquivalenceKind>('drinks');
+  const [perSourceOpen, setPerSourceOpen] = useState(false);
+  const [perSource, setPerSource] = useState<Partial<Record<'card' | 'witch' | 'rail', EquivalenceKind>>>({});
   const [difficulty, setDifficulty] = useState<DifficultyLevel>('medium');
   const [joinCode, setJoinCode] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -52,9 +54,10 @@ export function JoinForm() {
   function go(code: string, includeDifficulty: boolean) {
     saveProfile({ name, suit, color, emoji, equivalencePreference });
     const params = new URLSearchParams({ name, suit, color, emoji, equivalencePreference });
-    // Difficulty is honoured only by the host (room creator); join paths skip it so it doesn't
-    // override the level baked into the room when it was created.
     if (includeDifficulty) params.set('difficulty', difficulty);
+    if (Object.keys(perSource).length > 0) {
+      params.set('equivalencePerSource', JSON.stringify(perSource));
+    }
     router.push(`/lobby/${code}?${params.toString()}`);
   }
 
@@ -245,6 +248,49 @@ export function JoinForm() {
               {DIFFICULTY_PRESETS[difficulty].config.sipsPerCard} gorgée(s)
             </p>
           </fieldset>
+
+          <details
+            className="mt-4 rounded-lg border border-zinc-200 bg-white p-3"
+            open={perSourceOpen}
+            onToggle={(e) => setPerSourceOpen((e.currentTarget as HTMLDetailsElement).open)}
+          >
+            <summary className="cursor-pointer text-sm font-medium text-zinc-700">
+              🎯 Préférences par source (optionnel)
+            </summary>
+            <p className="mt-2 text-xs text-zinc-500">
+              Override par catégorie : ex. je bois sur les cartes mais je fais des pompes
+              sur la potion sorcière. Vide = utilise ta pref globale.
+            </p>
+            <div className="mt-3 space-y-2 text-xs">
+              {(['card', 'witch', 'rail'] as const).map((src) => (
+                <div key={src} className="flex items-center gap-2">
+                  <span className="w-20 text-zinc-700">
+                    {src === 'card' ? '♠♥ Cartes' : src === 'witch' ? '🧙 Sorcière' : '🚌 Rail'}
+                  </span>
+                  <select
+                    value={perSource[src] ?? ''}
+                    onChange={(e) => {
+                      const v = e.target.value as EquivalenceKind | '';
+                      setPerSource((prev) => {
+                        const next = { ...prev };
+                        if (v === '') delete next[src];
+                        else next[src] = v;
+                        return next;
+                      });
+                    }}
+                    className="flex-1 rounded border border-zinc-300 px-2 py-1 text-xs"
+                  >
+                    <option value="">— pref globale —</option>
+                    {EQUIVALENCE_KINDS.map((k) => (
+                      <option key={k} value={k}>
+                        {EQUIVALENCE_TABLE[k].emoji} {EQUIVALENCE_TABLE[k].label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+            </div>
+          </details>
 
           <button
             type="submit"

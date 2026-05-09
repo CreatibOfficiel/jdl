@@ -20,6 +20,7 @@ export interface ClientPlayer {
   diceRolls: number;
   equivalencePreference: string;
   equivalenceUnitsCompleted: number;
+  equivalencePerSource: string;
   sipsAbsorbedRecent: number;
   recentWindowStart: number;
   capsTriggered: number;

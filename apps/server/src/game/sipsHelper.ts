@@ -170,7 +170,28 @@ export function recordSip(room: GameRoom, args: RecordSipArgs): void {
   }
 }
 
-function resolvePref(player: Player): EquivalenceKind {
+/** Source kind → equivalence preference category (for the per-source override map). */
+function sourceCategory(source: string): string {
+  if (source === 'witch_potion') return 'witch';
+  if (source === 'rail_drink') return 'rail';
+  if (source === 'pt_malus') return 'pt_malus';
+  if (source === 'pill_red' || source === 'pill_blue') return 'pills';
+  if (source === 'red_drink' || source === 'card_mismatch' || source === 'bromance_drink') return 'card';
+  return 'card';
+}
+
+function resolvePref(player: Player, source?: string): EquivalenceKind {
+  // Per-source override has priority when present and parsable.
+  if (source && player.equivalencePerSource) {
+    try {
+      const map = JSON.parse(player.equivalencePerSource) as Record<string, string>;
+      const cat = sourceCategory(source);
+      const override = map[cat];
+      if (isEquivalenceKind(override)) return override;
+    } catch {
+      // Bad JSON — fall through to global preference.
+    }
+  }
   return isEquivalenceKind(player.equivalencePreference) ? player.equivalencePreference : 'drinks';
 }
 
@@ -187,7 +208,7 @@ function applySipToPlayer(
 ): void {
   const cap = applySoftCap(room, player, rawSips, kind);
   const sips = cap.sips;
-  const savedPref = resolvePref(player);
+  const savedPref = resolvePref(player, kind);
   // Effective pref for THIS sip event. Drink players get force-swapped to FALLBACK_EQUIVALENCE
   // when the cap engine asked for it; non-drink prefs honour their existing pref.
   const pref: EquivalenceKind =

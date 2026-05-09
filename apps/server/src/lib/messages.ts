@@ -22,6 +22,8 @@ export const JoinOptionsSchema = z.object({
   color: z.string().min(3).max(10),
   emoji: z.string().min(1).max(8),
   equivalencePreference: z.enum(EQUIVALENCE_KINDS as ['drinks', ...string[]]).default('drinks'),
+  /** JSON-encoded { card?, witch?, rail?, pills?, pt_malus? } map of overrides. Capped at 200 chars. */
+  equivalencePerSource: z.string().max(200).optional(),
   /** Honoured only when the room is created (passed by the host). Ignored on later joins. */
   difficulty: z.enum(DIFFICULTY_LEVELS as ['soft', ...string[]]).optional(),
 });
