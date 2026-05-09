@@ -208,6 +208,7 @@ export function RulesClient() {
   const [difficulty, setDifficulty] = useState<DifficultyLevel>('medium');
   const [equivalence, setEquivalence] = useState<EquivalenceKind>('drinks');
   const [search, setSearch] = useState('');
+  const [openCase, setOpenCase] = useState<CaseInfo | null>(null);
   const searchLower = search.trim().toLowerCase();
   const matchedCases = !searchLower
     ? CASES
@@ -366,10 +367,12 @@ export function RulesClient() {
           {matchedCases.map((c) => {
             const meta = CATEGORY_META[c.category];
             return (
-              <article
+              <button
+                type="button"
                 key={c.id}
                 id={c.id}
-                className={`rounded-2xl ${meta.bg} p-4 ring-1 ${meta.ring}`}
+                onClick={() => setOpenCase(c)}
+                className={`rounded-2xl ${meta.bg} p-4 ring-1 ${meta.ring} text-left transition hover:ring-2 hover:ring-blue-300`}
               >
                 <header className="flex items-baseline justify-between">
                   <h3 className="text-base font-semibold text-zinc-900">
@@ -382,11 +385,19 @@ export function RulesClient() {
                   className="mt-2 text-sm text-zinc-700"
                   dangerouslySetInnerHTML={{ __html: bold(fillTokens(c.effect)) }}
                 />
-              </article>
+              </button>
             );
           })}
         </div>
       </Section>
+
+      <CaseDetailModal
+        info={openCase}
+        onClose={() => setOpenCase(null)}
+        difficultyLabel={DIFFICULTY_PRESETS[difficulty].label}
+        equivalenceLabel={equivRule.label}
+        renderEffect={(text) => bold(fillTokens(text))}
+      />
 
       <Section title="⚙️ Difficulté" anchor="difficulty">
         <p>
@@ -497,6 +508,57 @@ export function RulesClient() {
         </Link>
       </footer>
     </main>
+  );
+}
+
+function CaseDetailModal({
+  info,
+  onClose,
+  difficultyLabel,
+  equivalenceLabel,
+  renderEffect,
+}: {
+  info: CaseInfo | null;
+  onClose: () => void;
+  difficultyLabel: string;
+  equivalenceLabel: string;
+  renderEffect: (text: string) => string;
+}) {
+  if (!info) return null;
+  const meta = CATEGORY_META[info.category];
+  return (
+    <div
+      className="fixed inset-0 z-40 flex items-end justify-center bg-black/50 p-4 sm:items-center"
+      onClick={onClose}
+    >
+      <div
+        className={`w-full max-w-md rounded-2xl ${meta.bg} p-5 shadow-xl ring-1 ${meta.ring}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <header className="flex items-baseline justify-between">
+          <h2 className="text-2xl font-bold text-zinc-900">
+            <span className="mr-1 text-3xl">{info.emoji}</span> {info.name}
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-2xl text-zinc-500 hover:text-zinc-900"
+            aria-label="Fermer"
+          >
+            ×
+          </button>
+        </header>
+        <p className="mt-2 text-sm font-medium text-zinc-700">{info.short}</p>
+        <p
+          className="mt-3 text-base text-zinc-800"
+          dangerouslySetInnerHTML={{ __html: renderEffect(info.effect) }}
+        />
+        <p className="mt-4 text-xs text-zinc-500">
+          {meta.label} · valeurs pour <strong>{difficultyLabel}</strong> ·{' '}
+          <strong>{equivalenceLabel}</strong>
+        </p>
+      </div>
+    </div>
   );
 }
 

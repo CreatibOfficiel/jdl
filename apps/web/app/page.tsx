@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { AppearanceToggle } from '@/components/AppearanceToggle';
 import { JoinForm } from '@/components/lobby/JoinForm';
 
 export default function HomePage() {
@@ -19,7 +20,7 @@ export default function HomePage() {
 
       <JoinForm />
 
-      <footer className="mt-10 flex flex-wrap gap-4 border-t border-zinc-200 pt-4 text-sm text-zinc-500">
+      <footer className="mt-10 flex flex-wrap items-center gap-4 border-t border-zinc-200 pt-4 text-sm text-zinc-500">
         <Link href="/rules" className="text-blue-600 underline">
           Règles complètes
         </Link>
@@ -29,6 +30,9 @@ export default function HomePage() {
         <Link href="/preview?seed=hello" className="text-blue-600 underline">
           Aperçu plateau
         </Link>
+        <span className="ml-auto">
+          <AppearanceToggle />
+        </span>
       </footer>
     </main>
   );

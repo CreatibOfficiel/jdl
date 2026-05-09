@@ -7,3 +7,33 @@
 body {
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
+
+/* Colorblind mode: high-contrast palette overrides for board pawns + suits.
+ * Toggled by adding `colorblind` class to <html> via the AppearanceToggle. */
+html.colorblind .pawn-coral { background: #d55e00 !important; }
+html.colorblind .pawn-mint { background: #009e73 !important; }
+html.colorblind .pawn-sky { background: #56b4e9 !important; }
+html.colorblind .pawn-violet { background: #cc79a7 !important; }
+html.colorblind .pawn-amber { background: #e69f00 !important; }
+html.colorblind .pawn-emerald { background: #009e73 !important; }
+html.colorblind .pawn-rose { background: #cc79a7 !important; }
+html.colorblind .pawn-indigo { background: #0072b2 !important; }
+html.colorblind .pawn-lime { background: #f0e442 !important; color: #000 !important; }
+html.colorblind .pawn-cyan { background: #56b4e9 !important; }
+
+/* Add ASCII-style pattern overlays on suit cards in colorblind mode so they're
+   distinguishable without relying on color alone. */
+html.colorblind .suit-spades::after { content: " ●"; }
+html.colorblind .suit-hearts::after { content: " ◆"; }
+html.colorblind .suit-diamonds::after { content: " ★"; }
+html.colorblind .suit-clubs::after { content: " ▲"; }
+
+/* Reduced motion: disable spring/scale/blur transitions when user opts out. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

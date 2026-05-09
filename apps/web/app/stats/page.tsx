@@ -37,15 +37,15 @@ export default async function StatsPage() {
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
         <Leaderboard
-          title="🍻 Top buveurs"
+          title="🍻 Top participants"
           column="totalSipsTaken"
-          unit="gorgées bues"
+          unit="participation cumulée"
           rows={stats.drinkers}
         />
         <Leaderboard
-          title="🎁 Top distributeurs"
+          title="🎁 Top donneurs"
           column="totalSipsGiven"
-          unit="gorgées distribuées"
+          unit="distributions"
           rows={stats.givers}
         />
         <Leaderboard
@@ -61,6 +61,10 @@ export default async function StatsPage() {
           rows={stats.winners}
         />
       </div>
+      <p className="mt-2 text-xs text-zinc-500">
+        Les compteurs incluent les gorgées et les équivalences sport. La compétition est sur la
+        participation, pas sur l'alcool.
+      </p>
 
       {stats.pairs && stats.pairs.length > 0 && (
         <section className="mt-8 rounded-2xl border border-zinc-200 bg-white p-4">
