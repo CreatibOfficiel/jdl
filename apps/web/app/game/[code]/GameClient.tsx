@@ -15,6 +15,7 @@ import { MuteToggle } from '@/components/game/MuteToggle';
 import { PlayersBar } from '@/components/game/PlayersBar';
 import { StatsPanel } from '@/components/game/StatsPanel';
 import { BromanceModal } from '@/components/modals/BromanceModal';
+import { EquivalenceTaskModal } from '@/components/modals/EquivalenceTaskModal';
 import { LoadedDieModal } from '@/components/modals/LoadedDieModal';
 import { PilulesModal } from '@/components/modals/PilulesModal';
 import { PlayerPickerModal } from '@/components/modals/PlayerPickerModal';
@@ -24,8 +25,9 @@ import { TreasureModal } from '@/components/modals/TreasureModal';
 import { WitchOfferModal } from '@/components/modals/WitchOfferModal';
 import { WitchReceiveModal } from '@/components/modals/WitchReceiveModal';
 import { useColyseusRoom } from '@/hooks/useColyseusRoom';
+import { useEquivalenceQueue } from '@/hooks/useEquivalenceQueue';
 import { colyseusStateToBoard } from '@/lib/colyseusToBoard';
-import type { ClientGameState, ClientPlayer } from '@/types/colyseus';
+import type { ClientGameState, ClientPlayer, ClientSipEvent } from '@/types/colyseus';
 
 interface GameClientProps {
   code: string;
@@ -133,6 +135,13 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
 
   const me = state.players.get(room.sessionId);
   const board = colyseusStateToBoard(state);
+
+  const sipEventsArr = useMemo(() => {
+    const arr: ClientSipEvent[] = [];
+    state.sipEvents.forEach((e) => arr.push(e));
+    return arr;
+  }, [state.sipEvents, state.sipEventsTotalCount]);
+  const equivQueue = useEquivalenceQueue(sipEventsArr, room.sessionId, normalized);
   const turnOrderArray: string[] = [];
   state.turnOrder.forEach((id) => {
     turnOrderArray.push(id);
@@ -188,6 +197,11 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
         </div>
       </header>
       <StatsPanel state={state} open={statsOpen} onClose={() => setStatsOpen(false)} />
+      <EquivalenceTaskModal
+        task={equivQueue.current}
+        onDone={equivQueue.pop}
+        onSkip={equivQueue.pop}
+      />
 
       <PlayersBar
         players={state.players}

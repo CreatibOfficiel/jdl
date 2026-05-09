@@ -14,6 +14,15 @@ export function getTopWinners(limit = 10) {
   return db.select().from(players).orderBy(desc(players.totalWins)).limit(limit).all();
 }
 
+export function getTopAthletes(limit = 10) {
+  return db
+    .select()
+    .from(players)
+    .orderBy(desc(players.totalEquivalenceUnits))
+    .limit(limit)
+    .all();
+}
+
 export function getRecentGames(limit = 10) {
   return db.select().from(games).orderBy(desc(games.startedAt)).limit(limit).all();
 }

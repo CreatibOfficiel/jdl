@@ -62,6 +62,7 @@ export default async function GameStatsPage({ params }: GameStatsPageProps) {
               <th className="py-1">Joueur</th>
               <th className="py-1">🍺 bues</th>
               <th className="py-1">🎁 distribuées</th>
+              <th className="py-1">💪 effort</th>
               <th className="py-1">🎲 dés</th>
               <th className="py-1">🛒 achats</th>
               <th className="py-1">📍 fin</th>
@@ -76,6 +77,14 @@ export default async function GameStatsPage({ params }: GameStatsPageProps) {
                 </td>
                 <td className="py-2 font-mono">{p.sipsTaken}</td>
                 <td className="py-2 font-mono">{p.sipsGiven}</td>
+                <td className="py-2 font-mono">
+                  {p.equivalenceUnitsCompleted ?? 0}
+                  {p.equivalencePreference && p.equivalencePreference !== 'drinks' && (
+                    <span className="ml-1 text-xs text-zinc-400">
+                      ({p.equivalencePreference})
+                    </span>
+                  )}
+                </td>
                 <td className="py-2 font-mono">{p.diceRolls}</td>
                 <td className="py-2 font-mono">{p.shopPurchases}</td>
                 <td className="py-2 font-mono">{p.finishedPosition ?? '—'}</td>

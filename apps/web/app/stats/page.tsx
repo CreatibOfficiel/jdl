@@ -35,7 +35,7 @@ export default async function StatsPage() {
         </p>
       </header>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
         <Leaderboard
           title="🍻 Top buveurs"
           column="totalSipsTaken"
@@ -47,6 +47,12 @@ export default async function StatsPage() {
           column="totalSipsGiven"
           unit="gorgées distribuées"
           rows={stats.givers}
+        />
+        <Leaderboard
+          title="💪 Top athlètes"
+          column="totalEquivalenceUnits"
+          unit="unités d'effort"
+          rows={stats.athletes}
         />
         <Leaderboard
           title="🏆 Top victoires"
@@ -93,7 +99,10 @@ export default async function StatsPage() {
 
 interface LeaderboardProps {
   title: string;
-  column: keyof Pick<PlayerStats, 'totalSipsTaken' | 'totalSipsGiven' | 'totalWins'>;
+  column: keyof Pick<
+    PlayerStats,
+    'totalSipsTaken' | 'totalSipsGiven' | 'totalWins' | 'totalEquivalenceUnits'
+  >;
   unit: string;
   rows: PlayerStats[];
 }
@@ -111,7 +120,7 @@ function Leaderboard({ title, column, unit, rows }: LeaderboardProps) {
               <span className="mr-2 font-bold text-zinc-400">{i + 1}.</span>
               {r.name}
             </span>
-            <span className="font-mono text-zinc-900">{r[column]}</span>
+            <span className="font-mono text-zinc-900">{r[column] ?? 0}</span>
           </li>
         ))}
       </ol>

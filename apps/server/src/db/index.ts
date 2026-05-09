@@ -63,6 +63,21 @@ sqlite.exec(`
   CREATE INDEX IF NOT EXISTS idx_sip_events_game ON sip_events(game_id);
 `);
 
+// Idempotent column-level migrations. SQLite has no `ADD COLUMN IF NOT EXISTS`,
+// so we guard via pragma_table_info. Repeated boots do nothing on a fresh DB.
+function addColIfMissing(table: string, col: string, decl: string): void {
+  const cols = sqlite.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
+  if (cols.some((c) => c.name === col)) return;
+  sqlite.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${decl}`);
+}
+addColIfMissing('players', 'total_equivalence_units', 'INTEGER NOT NULL DEFAULT 0');
+addColIfMissing('game_player_stats', 'equivalence_preference', 'TEXT');
+addColIfMissing(
+  'game_player_stats',
+  'equivalence_units_completed',
+  'INTEGER NOT NULL DEFAULT 0',
+);
+
 export const db = drizzle(sqlite, { schema });
 export { schema };
 export const sqliteRaw = sqlite;

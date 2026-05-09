@@ -5,6 +5,7 @@ export interface PlayerStats {
   totalWins: number;
   totalSipsTaken: number;
   totalSipsGiven: number;
+  totalEquivalenceUnits: number;
   createdAt: number;
 }
 
@@ -27,6 +28,8 @@ export interface GamePlayerRecord {
   diceRolls: number;
   finishedPosition: number | null;
   won: number;
+  equivalencePreference: string | null;
+  equivalenceUnitsCompleted: number;
 }
 
 export interface SipEventRecord {
@@ -44,6 +47,7 @@ export interface TopStats {
   drinkers: PlayerStats[];
   givers: PlayerStats[];
   winners: PlayerStats[];
+  athletes: PlayerStats[];
   recent: GameRecord[];
 }
 

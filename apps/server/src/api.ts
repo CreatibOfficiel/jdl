@@ -5,6 +5,7 @@ import {
   getGameSipEvents,
   getGameStats,
   getRecentGames,
+  getTopAthletes,
   getTopDrinkers,
   getTopGivers,
   getTopWinners,
@@ -24,6 +25,7 @@ export function createApiApp(): Express {
       drinkers: getTopDrinkers(10),
       givers: getTopGivers(10),
       winners: getTopWinners(10),
+      athletes: getTopAthletes(10),
       recent: getRecentGames(20),
     });
   });

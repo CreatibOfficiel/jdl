@@ -49,13 +49,16 @@ export function persistFinishedGame(input: PersistFinishedGameInput): void {
         .onConflictDoNothing()
         .run();
 
-      // Increment lifetime totals
+      // Increment lifetime totals (always bump equivalence units regardless of the host's
+      // countEquivalenceAsSips toggle — the toggle only affects whether sipsTaken was bumped
+      // in the first place inside applySipToPlayer).
       tx.update(players)
         .set({
           totalGames: sql`${players.totalGames} + 1`,
           totalWins: sql`${players.totalWins} + ${won}`,
           totalSipsTaken: sql`${players.totalSipsTaken} + ${p.sipsTaken}`,
           totalSipsGiven: sql`${players.totalSipsGiven} + ${p.sipsGiven}`,
+          totalEquivalenceUnits: sql`${players.totalEquivalenceUnits} + ${p.equivalenceUnitsCompleted}`,
           name: p.name,
         })
         .where(eq(players.id, playerId))
@@ -73,6 +76,8 @@ export function persistFinishedGame(input: PersistFinishedGameInput): void {
           diceRolls: p.diceRolls,
           finishedPosition: p.position,
           won,
+          equivalencePreference: p.equivalencePreference || null,
+          equivalenceUnitsCompleted: p.equivalenceUnitsCompleted,
         })
         .onConflictDoNothing()
         .run();

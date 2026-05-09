@@ -16,6 +16,7 @@ export const players = sqliteTable('players', {
   totalWins: integer('total_wins').notNull().default(0),
   totalSipsTaken: integer('total_sips_taken').notNull().default(0),
   totalSipsGiven: integer('total_sips_given').notNull().default(0),
+  totalEquivalenceUnits: integer('total_equivalence_units').notNull().default(0),
   createdAt: integer('created_at').notNull(),
 });
 
@@ -31,6 +32,8 @@ export const gamePlayerStats = sqliteTable(
     diceRolls: integer('dice_rolls').notNull().default(0),
     finishedPosition: integer('finished_position'),
     won: integer('won').notNull().default(0),
+    equivalencePreference: text('equivalence_preference'),
+    equivalenceUnitsCompleted: integer('equivalence_units_completed').notNull().default(0),
   },
   (t) => ({
     pk: primaryKey({ columns: [t.gameId, t.playerId] }),
