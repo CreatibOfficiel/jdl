@@ -61,6 +61,19 @@ sqlite.exec(`
   CREATE INDEX IF NOT EXISTS idx_games_started_at ON games(started_at DESC);
   CREATE INDEX IF NOT EXISTS idx_gps_player ON game_player_stats(player_id);
   CREATE INDEX IF NOT EXISTS idx_sip_events_game ON sip_events(game_id);
+
+  CREATE TABLE IF NOT EXISTS seasons (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    created_at INTEGER NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS season_games (
+    season_id TEXT NOT NULL,
+    game_id TEXT NOT NULL,
+    added_at INTEGER NOT NULL,
+    PRIMARY KEY (season_id, game_id)
+  );
+  CREATE INDEX IF NOT EXISTS idx_season_games_game ON season_games(game_id);
 `);
 
 // Idempotent column-level migrations. SQLite has no `ADD COLUMN IF NOT EXISTS`,

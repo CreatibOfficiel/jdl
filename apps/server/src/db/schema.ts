@@ -51,6 +51,24 @@ export const sipEvents = sqliteTable('sip_events', {
   equivalence: text('equivalence'),
 });
 
+export const seasons = sqliteTable('seasons', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  createdAt: integer('created_at').notNull(),
+});
+
+export const seasonGames = sqliteTable(
+  'season_games',
+  {
+    seasonId: text('season_id').notNull(),
+    gameId: text('game_id').notNull(),
+    addedAt: integer('added_at').notNull(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.seasonId, t.gameId] }),
+  }),
+);
+
 export type DbGame = typeof games.$inferSelect;
 export type DbPlayer = typeof players.$inferSelect;
 export type DbGamePlayerStats = typeof gamePlayerStats.$inferSelect;

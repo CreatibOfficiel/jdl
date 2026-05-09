@@ -1,6 +1,14 @@
 import cors from 'cors';
 import express, { type Express } from 'express';
 import {
+  addGameToSeason,
+  createSeason,
+  getSeasonById,
+  getSeasonGameIds,
+  getSeasonStandings,
+  listSeasons,
+} from './db/repositories/seasons';
+import {
   getGameById,
   getGameSipEvents,
   getGameStats,
@@ -69,6 +77,57 @@ export function createApiApp(): Express {
       return;
     }
     res.json({ player, recent: getPlayerRecentGames(id, 20) });
+  });
+
+  app.get('/api/seasons', (_req, res) => {
+    res.json({ seasons: listSeasons(50) });
+  });
+
+  app.post('/api/seasons', (req, res) => {
+    const name = typeof req.body?.name === 'string' ? req.body.name : '';
+    if (!name.trim()) {
+      res.status(400).json({ error: 'name required' });
+      return;
+    }
+    try {
+      const season = createSeason(name);
+      res.json(season);
+    } catch (e) {
+      res.status(500).json({ error: (e as Error).message });
+    }
+  });
+
+  app.get('/api/seasons/:id', (req, res) => {
+    const id = req.params.id;
+    if (!id) {
+      res.status(400).json({ error: 'Missing id' });
+      return;
+    }
+    const season = getSeasonById(id);
+    if (!season) {
+      res.status(404).json({ error: 'Season not found' });
+      return;
+    }
+    res.json({
+      season,
+      gameIds: getSeasonGameIds(id),
+      standings: getSeasonStandings(id),
+    });
+  });
+
+  app.post('/api/seasons/:id/games', (req, res) => {
+    const id = req.params.id;
+    const gameId = typeof req.body?.gameId === 'string' ? req.body.gameId : '';
+    if (!id || !gameId) {
+      res.status(400).json({ error: 'Missing id or gameId' });
+      return;
+    }
+    const ok = addGameToSeason(id, gameId);
+    if (!ok) {
+      res.status(404).json({ error: 'Season not found or insert failed' });
+      return;
+    }
+    res.json({ ok: true });
   });
 
   return app;
