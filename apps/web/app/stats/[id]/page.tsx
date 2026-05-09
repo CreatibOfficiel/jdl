@@ -6,12 +6,15 @@ export const dynamic = 'force-dynamic';
 
 interface GameStatsPageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ source?: string }>;
 }
 
-export default async function GameStatsPage({ params }: GameStatsPageProps) {
+export default async function GameStatsPage({ params, searchParams }: GameStatsPageProps) {
   const { id } = await params;
-  const [detail, events] = await Promise.all([fetchGameDetail(id), fetchGameSipEvents(id)]);
+  const { source: sourceFilter } = await searchParams;
+  const [detail, allEvents] = await Promise.all([fetchGameDetail(id), fetchGameSipEvents(id)]);
   if (!detail) notFound();
+  const events = sourceFilter ? allEvents.filter((e) => e.source === sourceFilter) : allEvents;
 
   const { game, players } = detail;
   const duration = game.endedAt ? Math.round((game.endedAt - game.startedAt) / 60000) : null;
@@ -30,8 +33,10 @@ export default async function GameStatsPage({ params }: GameStatsPageProps) {
     if (next > maxPair) maxPair = next;
   }
 
+  // Always compute source breakdown from the unfiltered set so the chips list stays stable
+  // even when a filter is active.
   const sourceTotals = new Map<string, number>();
-  for (const e of events) {
+  for (const e of allEvents) {
     sourceTotals.set(e.source, (sourceTotals.get(e.source) ?? 0) + e.count);
   }
   const topSources = Array.from(sourceTotals.entries())
@@ -99,6 +104,36 @@ export default async function GameStatsPage({ params }: GameStatsPageProps) {
         <p className="mt-1 text-xs text-zinc-500">
           Lignes = donneur, colonnes = receveur. Plus c'est foncé, plus de gorgées.
         </p>
+
+        {topSources.length > 0 && (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="text-xs uppercase tracking-wide text-zinc-500">Filtre source :</span>
+            <Link
+              href={`/stats/${encodeURIComponent(id)}`}
+              className={`rounded-full border px-3 py-1 text-xs ${
+                !sourceFilter ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50'
+              }`}
+            >
+              tout
+            </Link>
+            {topSources.map(([src]) => {
+              const active = sourceFilter === src;
+              return (
+                <Link
+                  key={src}
+                  href={`/stats/${encodeURIComponent(id)}?source=${encodeURIComponent(src)}`}
+                  className={`rounded-full border px-3 py-1 text-xs ${
+                    active
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50'
+                  }`}
+                >
+                  {labelizeSource(src)}
+                </Link>
+              );
+            })}
+          </div>
+        )}
         {events.length === 0 ? (
           <p className="mt-3 italic text-zinc-400">
             Cette partie a été jouée avant l'arrivée des stats détaillées — pas d'historique disponible.

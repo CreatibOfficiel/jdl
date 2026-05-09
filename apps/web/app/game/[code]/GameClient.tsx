@@ -231,6 +231,7 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
         activeId={activeId}
         turnOrder={turnOrderArray}
         difficultyLevel={state.difficultyLevel}
+        sipEvents={sipEventsArr}
       />
 
       <div className="my-3 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">

@@ -207,6 +207,17 @@ const CATEGORY_META: Record<CaseInfo['category'], { label: string; bg: string; r
 export function RulesClient() {
   const [difficulty, setDifficulty] = useState<DifficultyLevel>('medium');
   const [equivalence, setEquivalence] = useState<EquivalenceKind>('drinks');
+  const [search, setSearch] = useState('');
+  const searchLower = search.trim().toLowerCase();
+  const matchedCases = !searchLower
+    ? CASES
+    : CASES.filter(
+        (c) =>
+          c.name.toLowerCase().includes(searchLower) ||
+          c.short.toLowerCase().includes(searchLower) ||
+          c.effect.toLowerCase().includes(searchLower) ||
+          c.id.includes(searchLower),
+      );
 
   const cfg = DIFFICULTY_PRESETS[difficulty].config;
   const equivRule = EQUIVALENCE_TABLE[equivalence];
@@ -338,8 +349,21 @@ export function RulesClient() {
         <p className="text-sm text-zinc-600">
           Cliquez (mentalement) sur celles qui vous intriguent — chaque carte a son effet complet.
         </p>
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Chercher une case (ex: prison, rouge, sorcière…)"
+          className="mt-3 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          aria-label="Chercher une case"
+        />
+        {searchLower && (
+          <p className="mt-2 text-xs text-zinc-500">
+            {matchedCases.length} résultat{matchedCases.length > 1 ? 's' : ''}
+          </p>
+        )}
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {CASES.map((c) => {
+          {matchedCases.map((c) => {
             const meta = CATEGORY_META[c.category];
             return (
               <article
