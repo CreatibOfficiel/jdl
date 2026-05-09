@@ -202,6 +202,10 @@ export function FinishedView({ winnerName, isMe, players, state }: FinishedViewP
         </p>
       </section>
 
+      {state?.boardSeed && (
+        <ShareGameButton roomId={typeof window !== 'undefined' ? window.location.pathname.split('/').pop() ?? '' : ''} seed={state.boardSeed} />
+      )}
+
       <div className="mt-6 flex flex-col gap-2 sm:flex-row">
         {cooldownActive ? (
           <div
@@ -226,6 +230,48 @@ export function FinishedView({ winnerName, isMe, players, state }: FinishedViewP
         </Link>
       </div>
     </section>
+  );
+}
+
+function ShareGameButton({ roomId, seed }: { roomId: string; seed: string }) {
+  const [copied, setCopied] = useState(false);
+  // The OG card is keyed on the persisted gameId == roomId. The room hasn't been persisted
+  // yet at finish-screen-render time (persistFinishedGame fires on dispose), so the share
+  // link points to /stats/<id> and the OG image will resolve once the user clicks share.
+  const url =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/stats/${encodeURIComponent(roomId)}`
+      : '';
+
+  async function handleShare() {
+    const text = `🎲 Soirée jdl ${seed} terminée !`;
+    if (typeof navigator !== 'undefined' && 'share' in navigator) {
+      try {
+        await navigator.share({ title: 'Jeu de la soirée', text, url });
+        return;
+      } catch {
+        /* user cancelled or unsupported */
+      }
+    }
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(`${text} ${url}`);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleShare}
+      className="mt-4 w-full rounded-xl border border-blue-300 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700 hover:bg-blue-100"
+    >
+      {copied ? '✅ Lien copié !' : '🔗 Partager la soirée'}
+    </button>
   );
 }
 
