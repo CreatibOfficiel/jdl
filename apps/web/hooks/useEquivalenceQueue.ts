@@ -31,6 +31,8 @@ interface UseEquivalenceQueueResult {
   pop: () => void;
 }
 
+const TASK_TIMEOUT_MS = 90_000;
+
 /** Watches state.sipEvents and queues up tasks for the local player whose sip events have a
  *  non-empty equivalence tag. Survives page refresh via sessionStorage keyed by roomId. */
 export function useEquivalenceQueue(
@@ -84,6 +86,14 @@ export function useEquivalenceQueue(
       return next;
     });
   };
+
+  // Auto-skip after 90s — protects against AFK players blocking their own modal queue.
+  // The task has already been recorded server-side; auto-skip is purely a UI eviction.
+  useEffect(() => {
+    if (!queue[0]) return;
+    const id = setTimeout(() => pop(), TASK_TIMEOUT_MS);
+    return () => clearTimeout(id);
+  }, [queue]);
 
   return { current: queue[0] ?? null, pop };
 }

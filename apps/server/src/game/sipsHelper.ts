@@ -64,6 +64,20 @@ function applySoftCap(room: GameRoom, player: Player, sips: number, source: stri
   const caps = SAFETY_BY_DIFFICULTY[level];
   const now = Date.now();
   decayWindow(player, now);
+
+  // Per-session ceiling (S3): once a player would cross the host-set lifetime ceiling,
+  // EVERY further sip is force-routed through equivalence — non-negotiable, no halve fallback.
+  const ceiling = room.state.maxSipsPerPlayerPerGame;
+  if (ceiling > 0 && player.sipsTaken + sips > ceiling) {
+    pushEvent(room.state, {
+      playerId: player.id,
+      kind: 'safety_session_ceiling',
+      text: `🛑 ${player.name} a atteint le plafond de la soirée — passage en équivalence sport`,
+      importance: 'high',
+    });
+    return { sips, forceEquivalence: true };
+  }
+
   const projected = player.sipsAbsorbedRecent + sips;
   if (projected <= caps.maxSipsPer10Min) {
     return { sips, forceEquivalence: false };

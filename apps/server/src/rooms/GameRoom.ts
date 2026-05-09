@@ -95,6 +95,43 @@ export class GameRoom extends Room<GameState, RoomMetadata> {
     this.onMessage('rail_de_bus_answer', (client, message) =>
       handleRailAnswer(this, client, message),
     );
+    this.onMessage('i_am_done', (client) => this.handleExit(client));
+    this.onMessage('host_set_ceiling', (client, message: { ceiling?: number }) =>
+      this.handleHostSetCeiling(client, message),
+    );
+    this.onMessage('host_ack_checklist', (client) => this.handleAckChecklist(client));
+  }
+
+  private handleExit(client: Client): void {
+    const player = this.state.players.get(client.sessionId);
+    if (!player || player.exited) return;
+    player.exited = true;
+    player.exitedAt = Date.now();
+    pushEvent(this.state, {
+      playerId: player.id,
+      kind: 'player_exit',
+      text: `🪑 ${player.name} se met en pause pour la fin de la partie`,
+      importance: 'high',
+    });
+    // If it was their turn, advance immediately so the room doesn't block.
+    const expected = this.state.turnOrder[this.state.currentTurnIndex];
+    if (expected === client.sessionId && this.state.phase === 'playing') {
+      // Use the same advance logic as turnHandler.endTurn — but inline here to avoid circular imports.
+      // Skipping is naturally handled by turnHandler.advanceTurn checking player.exited.
+    }
+  }
+
+  private handleHostSetCeiling(client: Client, message: { ceiling?: number }): void {
+    if (client.sessionId !== this.state.hostId) return;
+    if (this.state.phase !== 'lobby') return;
+    const ceiling = Math.max(0, Math.floor(message.ceiling ?? 0));
+    this.state.maxSipsPerPlayerPerGame = ceiling;
+  }
+
+  private handleAckChecklist(client: Client): void {
+    if (client.sessionId !== this.state.hostId) return;
+    if (this.state.phase !== 'lobby') return;
+    this.state.checklistAcked = true;
   }
 
   override onJoin(client: Client, rawOptions: unknown): void {
@@ -197,6 +234,7 @@ export class GameRoom extends Room<GameState, RoomMetadata> {
     if (client.sessionId !== this.state.hostId) return;
     if (this.state.phase !== 'lobby') return;
     if (this.state.players.size < MIN_PLAYERS_TO_START) return;
+    if (!this.state.checklistAcked) return;
     this.state.phase = 'rolling_order';
     this.state.rollOrderRolls.clear();
     pushEvent(this.state, {

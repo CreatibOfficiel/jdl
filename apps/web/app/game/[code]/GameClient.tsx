@@ -171,6 +171,13 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
     router.push('/');
   }
 
+  function handleIamDone() {
+    if (!room) return;
+    if (!confirm('Te mettre en pause pour la fin de la partie ? Tu seras passé(e) à chaque tour.')) return;
+    room.send('i_am_done');
+  }
+  const meExited = me?.exited ?? false;
+
   return (
     <main className="mx-auto max-w-5xl px-4 py-4">
       <ConnectionStatus status={status} error={error} />
@@ -186,6 +193,21 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
           >
             📊
           </button>
+          {!meExited && state.phase === 'playing' && (
+            <button
+              type="button"
+              onClick={handleIamDone}
+              className="rounded-lg border border-zinc-300 bg-white px-3 py-1 text-xs text-zinc-700 hover:bg-zinc-50"
+              title="Je passe pour la fin de la partie"
+            >
+              🪑 Je passe
+            </button>
+          )}
+          {meExited && (
+            <span className="rounded-lg bg-zinc-100 px-3 py-1 text-xs text-zinc-500" title="Tu es en pause">
+              🪑 En pause
+            </span>
+          )}
           <MuteToggle />
           <button
             type="button"
@@ -208,6 +230,7 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
         selfId={room.sessionId}
         activeId={activeId}
         turnOrder={turnOrderArray}
+        difficultyLevel={state.difficultyLevel}
       />
 
       <div className="my-3 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
@@ -240,6 +263,7 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
               winnerName={state.players.get(state.winnerId)?.name ?? '?'}
               isMe={state.winnerId === room.sessionId}
               players={playersList}
+              state={state}
             />
           )}
 

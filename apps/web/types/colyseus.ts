@@ -25,6 +25,8 @@ export interface ClientPlayer {
   capsTriggered: number;
   consecutiveCaps: number;
   autoSwapsTriggered: number;
+  exited: boolean;
+  exitedAt: number;
 }
 
 export interface ClientSipEvent {
@@ -98,4 +100,6 @@ export interface ClientGameState {
   witchPotionSips: number;
   ptMalusSips: number;
   totalHydrationPrompts: number;
+  maxSipsPerPlayerPerGame: number;
+  checklistAcked: boolean;
 }

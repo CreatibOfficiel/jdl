@@ -42,4 +42,9 @@ export class GameState extends Schema {
   @type('number') ptMalusSips: number = 6;
   /** Total hydration prompts pushed by the safety throttle this game. */
   @type('number') totalHydrationPrompts: number = 0;
+  /** Host-set ceiling: when a player would exceed this many total sips, every further sip is
+   *  forced through equivalence. 0 = disabled. */
+  @type('number') maxSipsPerPlayerPerGame: number = 0;
+  /** Host has acked the pre-game checklist (water / snacks / age / exit). Gates start_game. */
+  @type('boolean') checklistAcked: boolean = false;
 }

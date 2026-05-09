@@ -170,7 +170,8 @@ function advanceTurn(room: GameRoom): void {
     const id = room.state.turnOrder[room.state.currentTurnIndex];
     if (!id) return;
     const player = room.state.players.get(id);
-    if (player?.connected) return;
+    // Skip exited players (Wave 1 — S5 graceful exit) AND disconnected players.
+    if (player?.connected && !player.exited) return;
     room.state.currentTurnIndex = nextTurnIndex(room.state.currentTurnIndex, total);
   }
 }

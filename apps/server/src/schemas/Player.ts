@@ -34,4 +34,8 @@ export class Player extends Schema {
   @type('number') consecutiveCaps: number = 0;
   /** How many auto-swaps this player triggered (cap → equivalence override). Surface in post-game safety panel. */
   @type('number') autoSwapsTriggered: number = 0;
+  /** Player tapped "I'm done" — kept on roster for cosmetic continuity but skipped from turn order. */
+  @type('boolean') exited: boolean = false;
+  /** Timestamp of exit, for post-game stats. */
+  @type('number') exitedAt: number = 0;
 }
