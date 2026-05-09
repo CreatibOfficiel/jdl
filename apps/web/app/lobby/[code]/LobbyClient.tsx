@@ -1,6 +1,11 @@
 'use client';
 
-import { isValidGameCode, normalizeGameCode } from '@jeu-soiree/shared';
+import {
+  DIFFICULTY_PRESETS,
+  isDifficultyLevel,
+  isValidGameCode,
+  normalizeGameCode,
+} from '@jeu-soiree/shared';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
@@ -19,6 +24,8 @@ interface LobbyClientProps {
     color?: string;
     emoji?: string;
     equivalencePreference?: string;
+    /** Only honoured when this client is the room creator. */
+    difficulty?: string;
   };
 }
 
@@ -39,14 +46,18 @@ export function LobbyClient({ code, initialProfile }: LobbyClientProps) {
   );
 
   const options = useMemo(
-    () => ({
-      code: normalized,
-      name: initialProfile.name ?? '',
-      suit: initialProfile.suit ?? '',
-      color: initialProfile.color ?? '',
-      emoji: initialProfile.emoji ?? '',
-      equivalencePreference: initialProfile.equivalencePreference ?? 'drinks',
-    }),
+    () => {
+      const base: Record<string, string> = {
+        code: normalized,
+        name: initialProfile.name ?? '',
+        suit: initialProfile.suit ?? '',
+        color: initialProfile.color ?? '',
+        emoji: initialProfile.emoji ?? '',
+        equivalencePreference: initialProfile.equivalencePreference ?? 'drinks',
+      };
+      if (initialProfile.difficulty) base.difficulty = initialProfile.difficulty;
+      return base;
+    },
     [
       normalized,
       initialProfile.name,
@@ -54,6 +65,7 @@ export function LobbyClient({ code, initialProfile }: LobbyClientProps) {
       initialProfile.color,
       initialProfile.emoji,
       initialProfile.equivalencePreference,
+      initialProfile.difficulty,
     ],
   );
 
@@ -141,6 +153,9 @@ export function LobbyClient({ code, initialProfile }: LobbyClientProps) {
   const isHost = me?.isHost ?? false;
   const canStart = isHost && state.players.size >= 2 && state.phase === 'lobby';
   const board = colyseusStateToBoard(state);
+  const difficultyMeta = isDifficultyLevel(state.difficultyLevel)
+    ? DIFFICULTY_PRESETS[state.difficultyLevel]
+    : null;
 
   function handleStart() {
     room?.send('start_game');
@@ -155,7 +170,14 @@ export function LobbyClient({ code, initialProfile }: LobbyClientProps) {
     <main className="mx-auto max-w-5xl px-6 py-8">
       <header className="mb-6 flex flex-wrap items-baseline justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Lobby</h1>
+          <h1 className="text-2xl font-bold">
+            Lobby
+            {difficultyMeta && (
+              <span className="ml-3 rounded-full bg-zinc-100 px-3 py-1 align-middle text-sm font-medium text-zinc-700">
+                {difficultyMeta.emoji} {difficultyMeta.label}
+              </span>
+            )}
+          </h1>
           <p className="text-sm text-zinc-500">
             En attente que le host démarre la partie. {state.players.size}/10 joueurs.
           </p>

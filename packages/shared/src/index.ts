@@ -10,6 +10,14 @@ export { PAWN_COLOR_IDS, PAWN_COLORS, type PawnColor } from './constants/colors'
 export { AVATAR_EMOJIS } from './constants/emojis';
 export type { BoardCase, CaseType, Suit } from './types/case';
 export {
+  DIFFICULTY_LEVELS,
+  DIFFICULTY_PRESETS,
+  type DifficultyLevel,
+  type DifficultyMeta,
+  GAME_CONFIG_BY_DIFFICULTY,
+  isDifficultyLevel,
+} from './types/difficulty';
+export {
   EQUIVALENCE_KINDS,
   EQUIVALENCE_TABLE,
   type EquivalenceKind,

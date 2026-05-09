@@ -1,5 +1,4 @@
 import { applyMove, FINISH } from '@jeu-soiree/game-logic';
-import { DEFAULT_GAME_CONFIG } from '@jeu-soiree/shared';
 import type { GameRoom } from '../rooms/GameRoom';
 import type { BoardCaseSchema } from '../schemas/BoardCaseSchema';
 import type { Player } from '../schemas/Player';
@@ -90,7 +89,7 @@ export function resolveCaseEffect(room: GameRoom, player: Player): void {
     case 'hearts':
     case 'diamonds':
     case 'clubs': {
-      const sips = DEFAULT_GAME_CONFIG.sipsPerCard;
+      const sips = room.state.sipsPerCard;
       const symbol = SUIT_SYMBOL[caseData.caseType] ?? '?';
       if (caseData.caseType === player.suit) {
         applyDistribute(room, player, sips, symbol, 'card_match', 'son signe');

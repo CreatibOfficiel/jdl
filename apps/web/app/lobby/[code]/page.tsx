@@ -8,6 +8,7 @@ interface LobbyPageProps {
     color?: string;
     emoji?: string;
     equivalencePreference?: string;
+    difficulty?: string;
   }>;
 }
 

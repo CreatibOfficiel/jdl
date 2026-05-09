@@ -2,6 +2,9 @@
 
 import {
   AVATAR_EMOJIS,
+  DIFFICULTY_LEVELS,
+  DIFFICULTY_PRESETS,
+  type DifficultyLevel,
   EQUIVALENCE_KINDS,
   EQUIVALENCE_TABLE,
   type EquivalenceKind,
@@ -32,6 +35,7 @@ export function JoinForm() {
   const [color, setColor] = useState<string>(FALLBACK_COLOR);
   const [emoji, setEmoji] = useState<string>(FALLBACK_EMOJI);
   const [equivalencePreference, setEquivalencePreference] = useState<EquivalenceKind>('drinks');
+  const [difficulty, setDifficulty] = useState<DifficultyLevel>('medium');
   const [joinCode, setJoinCode] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -45,9 +49,12 @@ export function JoinForm() {
     if (p.equivalencePreference) setEquivalencePreference(p.equivalencePreference);
   }, []);
 
-  function go(code: string) {
+  function go(code: string, includeDifficulty: boolean) {
     saveProfile({ name, suit, color, emoji, equivalencePreference });
     const params = new URLSearchParams({ name, suit, color, emoji, equivalencePreference });
+    // Difficulty is honoured only by the host (room creator); join paths skip it so it doesn't
+    // override the level baked into the room when it was created.
+    if (includeDifficulty) params.set('difficulty', difficulty);
     router.push(`/lobby/${code}?${params.toString()}`);
   }
 
@@ -58,7 +65,7 @@ export function JoinForm() {
       return;
     }
     setError(null);
-    go(generateGameCode());
+    go(generateGameCode(), true);
   }
 
   function handleJoin(e: FormEvent) {
@@ -78,7 +85,7 @@ export function JoinForm() {
       return;
     }
     setError(null);
-    go(normalized);
+    go(normalized, false);
   }
 
   return (
@@ -205,6 +212,40 @@ export function JoinForm() {
         >
           <h2 className="text-base font-semibold text-zinc-700">Créer une partie</h2>
           <p className="mt-1 text-sm text-zinc-500">Tu deviens host. Un code est généré.</p>
+
+          <fieldset className="mt-4">
+            <legend className="text-sm text-zinc-600">Difficulté</legend>
+            <div className="mt-1 grid grid-cols-3 gap-2">
+              {DIFFICULTY_LEVELS.map((lvl) => {
+                const meta = DIFFICULTY_PRESETS[lvl];
+                const active = difficulty === lvl;
+                return (
+                  <button
+                    key={lvl}
+                    type="button"
+                    onClick={() => setDifficulty(lvl)}
+                    aria-pressed={active}
+                    title={meta.description}
+                    className={`rounded-lg border-2 px-2 py-2 text-center transition ${
+                      active
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-zinc-200 bg-white hover:border-zinc-300'
+                    }`}
+                  >
+                    <div className="text-xl" aria-hidden="true">
+                      {meta.emoji}
+                    </div>
+                    <div className="text-xs font-medium text-zinc-800">{meta.label}</div>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-xs text-zinc-500">
+              {DIFFICULTY_PRESETS[difficulty].description} · cartes ={' '}
+              {DIFFICULTY_PRESETS[difficulty].config.sipsPerCard} gorgée(s)
+            </p>
+          </fieldset>
+
           <button
             type="submit"
             className="mt-4 w-full rounded-lg bg-blue-600 px-4 py-3 font-medium text-white transition hover:bg-blue-700"

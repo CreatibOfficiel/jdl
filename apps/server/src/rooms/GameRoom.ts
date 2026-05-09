@@ -1,4 +1,5 @@
 import { generateBoard } from '@jeu-soiree/game-logic';
+import { GAME_CONFIG_BY_DIFFICULTY, isDifficultyLevel } from '@jeu-soiree/shared';
 import { type Client, Room, ServerError } from 'colyseus';
 import { persistFinishedGame } from '../db/repositories/games';
 import { handleChooseBromance } from '../game/cases/bromance';
@@ -23,6 +24,7 @@ const RECONNECTION_TIMEOUT_SECONDS = 60;
 
 interface CreateOptions {
   code?: string;
+  difficulty?: string;
 }
 
 interface RoomMetadata {
@@ -48,6 +50,13 @@ export class GameRoom extends Room<GameState, RoomMetadata> {
     this.state.boardSeed = code;
     this.startedAt = Date.now();
     await this.setMetadata({ code });
+
+    const difficulty = isDifficultyLevel(options.difficulty) ? options.difficulty : 'medium';
+    const cfg = GAME_CONFIG_BY_DIFFICULTY[difficulty];
+    this.state.difficultyLevel = difficulty;
+    this.state.sipsPerCard = cfg.sipsPerCard;
+    this.state.witchPotionSips = cfg.witchPotionSips;
+    this.state.ptMalusSips = cfg.ptMalusSips;
 
     const board = generateBoard(code);
     this.state.thirstZoneStart = board.thirstZone.start;

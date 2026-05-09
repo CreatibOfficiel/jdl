@@ -9,8 +9,6 @@ interface UseItemMessage {
   diceValue?: number;
 }
 
-const PT_MALUS_SIPS = 6;
-
 export function handleUseItem(room: GameRoom, client: Client, message: UseItemMessage): void {
   const player = room.state.players.get(client.sessionId);
   if (!player) return;
@@ -25,7 +23,7 @@ export function handleUseItem(room: GameRoom, client: Client, message: UseItemMe
       pushEvent(room.state, {
         playerId: player.id,
         kind: 'use_malus',
-        text: `💣 ${player.name} balance un Pt malus à ${target.name} → ${PT_MALUS_SIPS} gorgées !`,
+        text: `💣 ${player.name} balance un Pt malus à ${target.name} → ${room.state.ptMalusSips} gorgées !`,
         importance: 'high',
       });
       return;

@@ -32,4 +32,12 @@ export class GameState extends Schema {
    *  player's equivalenceUnitsCompleted. When false, an opt-out player's drink count stays at 0
    *  in /stats — they only show on the "Top athletes" board. */
   @type('boolean') countEquivalenceAsSips: boolean = true;
+  /** DifficultyLevel from @jeu-soiree/shared. Picked by the host at create time. */
+  @type('string') difficultyLevel: string = 'medium';
+  /** Sips per suit card mismatch (or distribute on match). Defaults match the medium preset. */
+  @type('number') sipsPerCard: number = 3;
+  /** Default sips offered by witch potion (the offerer can override per-call). */
+  @type('number') witchPotionSips: number = 5;
+  /** Sips dealt by the malus_point item. */
+  @type('number') ptMalusSips: number = 6;
 }

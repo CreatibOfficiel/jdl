@@ -87,4 +87,8 @@ export interface ClientGameState {
   sipEvents: ClientArraySchema<ClientSipEvent>;
   sipEventsTotalCount: number;
   countEquivalenceAsSips: boolean;
+  difficultyLevel: string;
+  sipsPerCard: number;
+  witchPotionSips: number;
+  ptMalusSips: number;
 }
