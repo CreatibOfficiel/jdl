@@ -3,7 +3,7 @@
 import { isValidGameCode, normalizeGameCode } from '@jeu-soiree/shared';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Board } from '@/components/board/Board';
 import { Dice3D } from '@/components/dice/Dice3D';
 import { ConnectionStatus } from '@/components/game/ConnectionStatus';
@@ -27,6 +27,7 @@ import { WitchOfferModal } from '@/components/modals/WitchOfferModal';
 import { WitchReceiveModal } from '@/components/modals/WitchReceiveModal';
 import { useColyseusRoom } from '@/hooks/useColyseusRoom';
 import { useEquivalenceQueue } from '@/hooks/useEquivalenceQueue';
+import { useSounds } from '@/hooks/useSounds';
 import { colyseusStateToBoard } from '@/lib/colyseusToBoard';
 import type { ClientGameState, ClientPlayer, ClientSipEvent } from '@/types/colyseus';
 
@@ -76,11 +77,21 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
   const [witchOfferOpen, setWitchOfferOpen] = useState(false);
   const [loadedDieOpen, setLoadedDieOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
+  const sounds = useSounds();
 
   // Reset hasRolledOrder when phase moves on
   useEffect(() => {
     if (state?.phase !== 'rolling_order') setHasRolledOrder(false);
-  }, [state?.phase]);
+    if (state?.phase === 'finished') sounds.play('victory', 0.6);
+  }, [state?.phase, sounds]);
+
+  // Modal-open sound effect — fires on each new modal transition.
+  const lastModalRef = useRef('');
+  useEffect(() => {
+    const cur = state?.activeModal ?? '';
+    if (cur && cur !== lastModalRef.current) sounds.play('modal-open', 0.4);
+    lastModalRef.current = cur;
+  }, [state?.activeModal, sounds]);
 
   // Redirect back to lobby if phase reverts
   useEffect(() => {
@@ -158,12 +169,14 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
 
   function handleRollOrder() {
     if (!room || hasRolledOrder) return;
+    sounds.play('dice-roll', 0.5);
     room.send('roll_order_dice');
     setHasRolledOrder(true);
   }
 
   function handleRollDice() {
     if (!room || !isMyTurn) return;
+    sounds.play('dice-roll', 0.5);
     room.send('roll_dice');
   }
 
