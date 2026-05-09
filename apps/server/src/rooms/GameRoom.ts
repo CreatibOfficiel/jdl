@@ -109,6 +109,7 @@ export class GameRoom extends Room<GameState, RoomMetadata> {
     player.suit = options.suit;
     player.color = options.color;
     player.emoji = options.emoji;
+    player.equivalencePreference = options.equivalencePreference;
     player.connected = true;
     player.isHost = this.state.players.size === 0;
 

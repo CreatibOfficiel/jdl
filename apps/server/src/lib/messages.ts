@@ -1,3 +1,4 @@
+import { EQUIVALENCE_KINDS } from '@jeu-soiree/shared';
 import { z } from 'zod';
 
 export const SUITS = ['spades', 'hearts', 'diamonds', 'clubs'] as const;
@@ -12,6 +13,7 @@ export const JoinOptionsSchema = z.object({
   suit: z.enum(SUITS),
   color: z.string().min(3).max(10),
   emoji: z.string().min(1).max(8),
+  equivalencePreference: z.enum(EQUIVALENCE_KINDS as ['drinks', ...string[]]).default('drinks'),
 });
 
 export type JoinOptions = z.infer<typeof JoinOptionsSchema>;

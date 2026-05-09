@@ -9,6 +9,13 @@ export {
 export { PAWN_COLOR_IDS, PAWN_COLORS, type PawnColor } from './constants/colors';
 export { AVATAR_EMOJIS } from './constants/emojis';
 export type { BoardCase, CaseType, Suit } from './types/case';
+export {
+  EQUIVALENCE_KINDS,
+  EQUIVALENCE_TABLE,
+  type EquivalenceKind,
+  type EquivalenceRule,
+  isEquivalenceKind,
+} from './types/equivalence';
 export type { Board, ThirstZone } from './types/game';
 export {
   DEFAULT_GAME_CONFIG,

@@ -28,4 +28,8 @@ export class GameState extends Schema {
   @type(['string']) railCards = new ArraySchema<string>();
   @type([SipEvent]) sipEvents = new ArraySchema<SipEvent>();
   @type('number') sipEventsTotalCount: number = 0;
+  /** When true (default), equivalence units bump the leaderboard's totalSipsTaken alongside the
+   *  player's equivalenceUnitsCompleted. When false, an opt-out player's drink count stays at 0
+   *  in /stats — they only show on the "Top athletes" board. */
+  @type('boolean') countEquivalenceAsSips: boolean = true;
 }

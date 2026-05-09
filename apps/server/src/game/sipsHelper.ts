@@ -1,3 +1,4 @@
+import { EQUIVALENCE_TABLE, type EquivalenceKind, isEquivalenceKind } from '@jeu-soiree/shared';
 import type { GameRoom } from '../rooms/GameRoom';
 import type { Player } from '../schemas/Player';
 import { SipEvent } from '../schemas/SipEvent';
@@ -13,7 +14,7 @@ interface RecordSipArgs {
   count: number;
   /** Free-form tag matching the EventLog kind (e.g. 'red_drink', 'bromance_drink', 'witch_potion'). */
   source: string;
-  /** Empty when the player drank; else 'pushups' | 'squats' | 'jumping_jacks' | 'sit_out' (Stage C). */
+  /** Empty when the player drank; else 'pushups' | 'squats' | 'jumping_jacks' | 'sit_out'. */
   equivalence?: string;
 }
 
@@ -37,6 +38,64 @@ export function recordSip(room: GameRoom, args: RecordSipArgs): void {
   }
 }
 
+function resolvePref(player: Player): EquivalenceKind {
+  return isEquivalenceKind(player.equivalencePreference) ? player.equivalencePreference : 'drinks';
+}
+
+/** Apply N sips to a single player, respecting their equivalence preference + GameState toggle.
+ *  Pushes the appropriate EventLog (drink / equivalence task / sit-out), records the SipEvent,
+ *  and bumps the right counters (sipsTaken / equivalenceUnitsCompleted). */
+function applySipToPlayer(
+  room: GameRoom,
+  player: Player,
+  sips: number,
+  kind: string,
+  fallbackEmoji: string,
+  note: string,
+): void {
+  const pref = resolvePref(player);
+  const rule = EQUIVALENCE_TABLE[pref];
+  const countAsSips = room.state.countEquivalenceAsSips;
+  const tail = note ? ` (${note})` : '';
+
+  if (pref === 'drinks') {
+    pushEvent(room.state, {
+      playerId: player.id,
+      kind,
+      text: `${fallbackEmoji} ${player.name} boit ${sips} gorgée(s)${tail}`,
+      importance: 'normal',
+    });
+    player.sipsTaken += sips;
+    recordSip(room, { toId: player.id, count: sips, source: kind });
+    return;
+  }
+
+  if (pref === 'sit_out') {
+    pushEvent(room.state, {
+      playerId: player.id,
+      kind,
+      text: `🪑 ${player.name} passe (skip ${sips} gorgée(s))${tail}`,
+      importance: 'normal',
+    });
+    // sit_out: no counter bumps either way — player neither drinks nor performs a task.
+    recordSip(room, { toId: player.id, count: sips, source: kind, equivalence: 'sit_out' });
+    return;
+  }
+
+  const units = sips * rule.perSip;
+  pushEvent(room.state, {
+    playerId: player.id,
+    kind,
+    text: `${rule.emoji} ${player.name} doit ${units} ${rule.unit} (au lieu de ${sips} gorgée(s))${tail}`,
+    importance: 'normal',
+  });
+  player.equivalenceUnitsCompleted += units;
+  if (countAsSips) {
+    player.sipsTaken += sips;
+  }
+  recordSip(room, { toId: player.id, count: sips, source: kind, equivalence: pref });
+}
+
 interface ApplyDrinkArgs {
   player: Player;
   sips: number;
@@ -46,38 +105,32 @@ interface ApplyDrinkArgs {
   reason?: string;
 }
 
-/** Pushes "X boit N gorgées" + bromance ricochet if any. Consumes doubleNextSip. */
+/** Pushes "X boit N gorgées" + bromance ricochet if any. Consumes doubleNextSip.
+ *  Each affected player's equivalence preference is honoured independently. */
 export function applyDrink(room: GameRoom, args: ApplyDrinkArgs): void {
   const { player, sips, emoji, kind, reason } = args;
 
   let effective = sips;
-  let doubled = false;
+  let note = reason ?? '';
   if (player.doubleNextSip) {
     effective = sips * 2;
     player.doubleNextSip = false;
-    doubled = true;
+    note = note ? `${note} — DOUBLÉ` : 'DOUBLÉ';
   }
 
-  pushEvent(room.state, {
-    playerId: player.id,
-    kind,
-    text: `${emoji} ${player.name} boit ${effective} gorgée(s)${reason ? ` (${reason})` : ''}${doubled ? ' — DOUBLÉ' : ''}`,
-    importance: 'normal',
-  });
-  player.sipsTaken += effective;
-  recordSip(room, { toId: player.id, count: effective, source: kind });
+  applySipToPlayer(room, player, effective, kind, emoji, note);
 
   if (player.bromanceWith) {
     const bro = room.state.players.get(player.bromanceWith);
     if (bro?.connected) {
-      pushEvent(room.state, {
-        playerId: bro.id,
-        kind: 'bromance_drink',
-        text: `💪 ${bro.name} boit aussi ${effective} gorgée(s) (bromance avec ${player.name})`,
-        importance: 'normal',
-      });
-      bro.sipsTaken += effective;
-      recordSip(room, { toId: bro.id, count: effective, source: 'bromance_drink' });
+      applySipToPlayer(
+        room,
+        bro,
+        effective,
+        'bromance_drink',
+        '💪',
+        `bromance avec ${player.name}`,
+      );
     }
   }
 }

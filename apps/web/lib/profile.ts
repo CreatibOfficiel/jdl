@@ -1,4 +1,4 @@
-import type { Suit } from '@jeu-soiree/shared';
+import type { EquivalenceKind, Suit } from '@jeu-soiree/shared';
 
 const STORAGE_KEY = 'jeu-soiree-profile';
 
@@ -7,6 +7,7 @@ export interface PlayerProfile {
   suit: Suit;
   color: string;
   emoji: string;
+  equivalencePreference: EquivalenceKind;
 }
 
 export function loadProfile(): Partial<PlayerProfile> | null {

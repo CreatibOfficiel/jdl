@@ -17,6 +17,17 @@ export interface ClientPlayer {
   sipsGiven: number;
   shopPurchases: number;
   diceRolls: number;
+  equivalencePreference: string;
+  equivalenceUnitsCompleted: number;
+}
+
+export interface ClientSipEvent {
+  ts: number;
+  fromId: string;
+  toId: string;
+  count: number;
+  source: string;
+  equivalence: string;
 }
 
 export interface ClientBoardCase {
@@ -73,4 +84,7 @@ export interface ClientGameState {
   treasuresOpened: ClientArraySchema<number>;
   railRound: number;
   railCards: ClientArraySchema<string>;
+  sipEvents: ClientArraySchema<ClientSipEvent>;
+  sipEventsTotalCount: number;
+  countEquivalenceAsSips: boolean;
 }

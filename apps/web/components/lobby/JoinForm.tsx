@@ -2,6 +2,9 @@
 
 import {
   AVATAR_EMOJIS,
+  EQUIVALENCE_KINDS,
+  EQUIVALENCE_TABLE,
+  type EquivalenceKind,
   generateGameCode,
   isValidGameCode,
   normalizeGameCode,
@@ -28,6 +31,7 @@ export function JoinForm() {
   const [suit, setSuit] = useState<Suit>('hearts');
   const [color, setColor] = useState<string>(FALLBACK_COLOR);
   const [emoji, setEmoji] = useState<string>(FALLBACK_EMOJI);
+  const [equivalencePreference, setEquivalencePreference] = useState<EquivalenceKind>('drinks');
   const [joinCode, setJoinCode] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -38,11 +42,12 @@ export function JoinForm() {
     if (p.suit) setSuit(p.suit);
     if (p.color) setColor(p.color);
     if (p.emoji) setEmoji(p.emoji);
+    if (p.equivalencePreference) setEquivalencePreference(p.equivalencePreference);
   }, []);
 
   function go(code: string) {
-    saveProfile({ name, suit, color, emoji });
-    const params = new URLSearchParams({ name, suit, color, emoji });
+    saveProfile({ name, suit, color, emoji, equivalencePreference });
+    const params = new URLSearchParams({ name, suit, color, emoji, equivalencePreference });
     router.push(`/lobby/${code}?${params.toString()}`);
   }
 
@@ -152,6 +157,37 @@ export function JoinForm() {
                 {e}
               </button>
             ))}
+          </div>
+        </fieldset>
+
+        <fieldset className="mt-4">
+          <legend className="text-sm text-zinc-600">
+            Quand je dois boire,{' '}
+            <span className="text-zinc-400">je préfère</span>
+          </legend>
+          <div className="mt-1 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {EQUIVALENCE_KINDS.map((k) => {
+              const rule = EQUIVALENCE_TABLE[k];
+              const active = equivalencePreference === k;
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setEquivalencePreference(k)}
+                  aria-pressed={active}
+                  className={`flex items-center gap-2 rounded-lg border-2 px-3 py-2 text-left transition ${
+                    active
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-zinc-200 bg-white hover:border-zinc-300'
+                  }`}
+                >
+                  <span className="text-xl" aria-hidden="true">
+                    {rule.emoji}
+                  </span>
+                  <span className="text-sm font-medium text-zinc-800">{rule.label}</span>
+                </button>
+              );
+            })}
           </div>
         </fieldset>
       </section>

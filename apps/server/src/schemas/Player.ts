@@ -20,4 +20,8 @@ export class Player extends Schema {
   @type('number') sipsGiven: number = 0;
   @type('number') shopPurchases: number = 0;
   @type('number') diceRolls: number = 0;
+  /** EquivalenceKind from @jeu-soiree/shared. Defaults to 'drinks' when unset. */
+  @type('string') equivalencePreference: string = 'drinks';
+  /** Cumulative equivalence units (e.g. pushups) the player owes — populated when preference != 'drinks'. */
+  @type('number') equivalenceUnitsCompleted: number = 0;
 }

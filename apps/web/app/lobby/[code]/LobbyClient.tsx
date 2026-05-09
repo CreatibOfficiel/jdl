@@ -18,6 +18,7 @@ interface LobbyClientProps {
     suit?: string;
     color?: string;
     emoji?: string;
+    equivalencePreference?: string;
   };
 }
 
@@ -44,6 +45,7 @@ export function LobbyClient({ code, initialProfile }: LobbyClientProps) {
       suit: initialProfile.suit ?? '',
       color: initialProfile.color ?? '',
       emoji: initialProfile.emoji ?? '',
+      equivalencePreference: initialProfile.equivalencePreference ?? 'drinks',
     }),
     [
       normalized,
@@ -51,6 +53,7 @@ export function LobbyClient({ code, initialProfile }: LobbyClientProps) {
       initialProfile.suit,
       initialProfile.color,
       initialProfile.emoji,
+      initialProfile.equivalencePreference,
     ],
   );
 
@@ -68,6 +71,7 @@ export function LobbyClient({ code, initialProfile }: LobbyClientProps) {
         suit: initialProfile.suit ?? '',
         color: initialProfile.color ?? '',
         emoji: initialProfile.emoji ?? '',
+        equivalencePreference: initialProfile.equivalencePreference ?? 'drinks',
       });
       router.replace(`/game/${normalized}?${params.toString()}`);
     }
