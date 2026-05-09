@@ -13,6 +13,7 @@ export interface ClientPlayer {
   prisonTurnsLeft: number;
   holeTurnsLeft: number;
   pendingForcedDice: number;
+  doubleNextSip: boolean;
   sipsTaken: number;
   sipsGiven: number;
   shopPurchases: number;

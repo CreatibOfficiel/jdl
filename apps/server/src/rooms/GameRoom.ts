@@ -12,13 +12,14 @@ import { handleGivePotion, handleSayThanks } from '../game/cases/witch';
 import { pushEvent } from '../game/eventLog';
 import { handleRollOrderDice } from '../game/rollingOrder';
 import { handleRollDice } from '../game/turnHandler';
-import { type JoinOptions, JoinOptionsSchema } from '../lib/messages';
+import { type JoinOptions, JoinOptionsSchema, SpectatorJoinSchema } from '../lib/messages';
 import { BoardCaseSchema } from '../schemas/BoardCaseSchema';
 import { GameState } from '../schemas/GameState';
 import { Player } from '../schemas/Player';
 import type { SipEvent } from '../schemas/SipEvent';
 
-const MAX_CLIENTS = 10;
+// 10 players + up to 10 spectators (master TV screens etc). Spectators don't add Player entries.
+const MAX_CLIENTS = 20;
 const MIN_PLAYERS_TO_START = 2;
 const RECONNECTION_TIMEOUT_SECONDS = 60;
 
@@ -93,6 +94,16 @@ export class GameRoom extends Room<GameState, RoomMetadata> {
   }
 
   override onJoin(client: Client, rawOptions: unknown): void {
+    // Spectators (master TV) skip the player profile path entirely: no Player schema entry,
+    // no suit/color/name collision check. Existing message handlers already guard on
+    // `state.players.get(sessionId)` so spectators can't trigger gameplay actions.
+    const spectatorParsed = SpectatorJoinSchema.safeParse(rawOptions);
+    if (spectatorParsed.success) {
+      client.userData = { spectator: true };
+      console.log(`[GameRoom ${this.state.boardSeed}] spectator joined (${client.sessionId})`);
+      return;
+    }
+
     const parsed = JoinOptionsSchema.safeParse(rawOptions);
     if (!parsed.success) {
       throw new ServerError(400, `Invalid join options: ${parsed.error.message}`);

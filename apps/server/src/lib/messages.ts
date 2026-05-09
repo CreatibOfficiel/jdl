@@ -3,12 +3,20 @@ import { z } from 'zod';
 
 export const SUITS = ['spades', 'hearts', 'diamonds', 'clubs'] as const;
 
+const codeField = z
+  .string()
+  .min(4)
+  .max(20)
+  .regex(/^[A-Z0-9-]+$/i);
+
+/** Read-only spectator (e.g. master TV view). Skips player profile validation. */
+export const SpectatorJoinSchema = z.object({
+  code: codeField,
+  spectator: z.literal(true),
+});
+
 export const JoinOptionsSchema = z.object({
-  code: z
-    .string()
-    .min(4)
-    .max(20)
-    .regex(/^[A-Z0-9-]+$/i),
+  code: codeField,
   name: z.string().trim().min(1).max(20),
   suit: z.enum(SUITS),
   color: z.string().min(3).max(10),
@@ -19,3 +27,4 @@ export const JoinOptionsSchema = z.object({
 });
 
 export type JoinOptions = z.infer<typeof JoinOptionsSchema>;
+export type SpectatorJoin = z.infer<typeof SpectatorJoinSchema>;
