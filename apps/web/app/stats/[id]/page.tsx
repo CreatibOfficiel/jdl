@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { badge, evaluateBadges, fromGamePlayerRecord } from '@/lib/badges';
 import { fetchGameDetail, fetchGameSipEvents } from '@/lib/statsApi';
 
 export const dynamic = 'force-dynamic';
@@ -43,6 +44,8 @@ export default async function GameStatsPage({ params, searchParams }: GameStatsP
     .sort((a, b) => b[1] - a[1])
     .slice(0, 8);
 
+  const badgeMap = evaluateBadges(players.map((p) => fromGamePlayerRecord(p)), allEvents);
+
   return (
     <main className="mx-auto max-w-4xl px-6 py-10">
       <header className="mb-6">
@@ -74,11 +77,24 @@ export default async function GameStatsPage({ params, searchParams }: GameStatsP
             </tr>
           </thead>
           <tbody>
-            {players.map((p) => (
+            {players.map((p) => {
+              const codes = badgeMap.get(p.playerId) ?? [];
+              return (
               <tr key={p.playerId} className="border-t border-zinc-100">
                 <td className="py-2">
                   {p.name}
-                  {p.won === 1 && <span className="ml-2 text-amber-600">🏆</span>}
+                  {codes.length > 0 && (
+                    <span className="ml-2 inline-flex gap-1">
+                      {codes.map((c) => {
+                        const b = badge(c);
+                        return b ? (
+                          <span key={c} title={`${b.label} — ${b.description}`}>
+                            {b.emoji}
+                          </span>
+                        ) : null;
+                      })}
+                    </span>
+                  )}
                 </td>
                 <td className="py-2 font-mono">{p.sipsTaken}</td>
                 <td className="py-2 font-mono">{p.sipsGiven}</td>
@@ -94,7 +110,8 @@ export default async function GameStatsPage({ params, searchParams }: GameStatsP
                 <td className="py-2 font-mono">{p.shopPurchases}</td>
                 <td className="py-2 font-mono">{p.finishedPosition ?? '—'}</td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </section>

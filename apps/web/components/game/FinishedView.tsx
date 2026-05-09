@@ -5,6 +5,7 @@ import confetti from 'canvas-confetti';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { badge, evaluateBadges, fromClientPlayer } from '@/lib/badges';
 import type { ClientGameState, ClientPlayer } from '@/types/colyseus';
 
 const COLOR_BY_ID = new Map(PAWN_COLORS.map((c) => [c.id, c.hex]));
@@ -76,6 +77,10 @@ export function FinishedView({ winnerName, isMe, players, state }: FinishedViewP
   const hydrationPrompts = state?.totalHydrationPrompts ?? 0;
 
   const playersArr = [...players];
+  const winnerId = state?.winnerId ?? '';
+  const badgeMap = evaluateBadges(
+    playersArr.map((p) => fromClientPlayer(p, p.id === winnerId)),
+  );
   const drinker = pickWinnerByMax(playersArr, (p) => p.sipsTaken);
   const giver = pickWinnerByMax(playersArr, (p) => p.sipsGiven);
   const roller = pickWinnerByMax(playersArr, (p) => p.diceRolls);
@@ -133,8 +138,9 @@ export function FinishedView({ winnerName, isMe, players, state }: FinishedViewP
         <ul className="mt-2 divide-y divide-zinc-100">
           {playersArr.map((p) => {
             const hex = COLOR_BY_ID.get(p.color) ?? '#999';
+            const codes = badgeMap.get(p.id) ?? [];
             return (
-              <li key={p.id} className="flex items-center gap-2 py-2 text-sm">
+              <li key={p.id} className="flex flex-wrap items-center gap-2 py-2 text-sm">
                 <span
                   className="flex h-7 w-7 items-center justify-center rounded-full"
                   style={{ background: hex }}
@@ -146,6 +152,24 @@ export function FinishedView({ winnerName, isMe, players, state }: FinishedViewP
                 <span className="font-mono text-xs text-zinc-500">
                   🍻 {p.sipsTaken} · 🎁 {p.sipsGiven} · 🎲 {p.diceRolls}
                 </span>
+                {codes.length > 0 && (
+                  <span className="flex gap-1">
+                    {codes.map((c) => {
+                      const b = badge(c);
+                      if (!b) return null;
+                      return (
+                        <span
+                          key={c}
+                          title={`${b.label} — ${b.description}`}
+                          aria-label={b.label}
+                          className="text-base"
+                        >
+                          {b.emoji}
+                        </span>
+                      );
+                    })}
+                  </span>
+                )}
               </li>
             );
           })}
