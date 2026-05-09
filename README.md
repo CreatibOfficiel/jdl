@@ -32,3 +32,5 @@ pnpm typecheck      # TypeScript
 ## Phase actuelle
 
 **Phase 1** : `boardGenerator` + page `/preview?seed=XXX` pour visualiser le plateau procédural.
+
+<!-- deploy test 10:24:21 -->
