@@ -22,13 +22,16 @@ export default function HomePage() {
 
       <footer className="mt-10 flex flex-wrap items-center gap-4 border-t border-zinc-200 pt-4 text-sm text-zinc-500">
         <Link href="/rules" className="text-blue-600 underline">
-          Règles complètes
+          Règles
         </Link>
         <Link href="/stats" className="text-blue-600 underline">
-          Stats globales
+          Stats
+        </Link>
+        <Link href="/seasons" className="text-blue-600 underline">
+          Saisons
         </Link>
         <Link href="/preview?seed=hello" className="text-blue-600 underline">
-          Aperçu plateau
+          Aperçu
         </Link>
         <span className="ml-auto">
           <AppearanceToggle />

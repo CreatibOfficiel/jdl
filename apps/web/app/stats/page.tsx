@@ -113,9 +113,15 @@ export default async function StatsPage() {
         </ul>
       </section>
 
-      <footer className="mt-8 text-sm">
+      <footer className="mt-8 flex flex-wrap gap-4 text-sm">
         <Link href="/" className="text-blue-600 underline">
           ← Retour à l'accueil
+        </Link>
+        <Link href="/seasons" className="text-blue-600 underline">
+          🏅 Saisons
+        </Link>
+        <Link href="/rules" className="text-blue-600 underline">
+          📖 Règles
         </Link>
       </footer>
     </main>
