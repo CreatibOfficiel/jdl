@@ -7,9 +7,10 @@ const STORAGE_KEY = 'jeu-soiree-appearance';
 export interface Appearance {
   colorblind: boolean;
   playerEchoes: boolean;
+  dark: boolean;
 }
 
-const DEFAULT_APPEARANCE: Appearance = { colorblind: false, playerEchoes: false };
+const DEFAULT_APPEARANCE: Appearance = { colorblind: false, playerEchoes: false, dark: false };
 
 export function loadAppearance(): Appearance {
   if (typeof window === 'undefined') return DEFAULT_APPEARANCE;
@@ -20,6 +21,7 @@ export function loadAppearance(): Appearance {
     return {
       colorblind: Boolean(parsed.colorblind),
       playerEchoes: Boolean(parsed.playerEchoes),
+      dark: Boolean(parsed.dark),
     };
   } catch {
     return DEFAULT_APPEARANCE;
@@ -42,6 +44,7 @@ function save(a: Appearance): void {
 function applyToDom(a: Appearance): void {
   if (typeof document === 'undefined') return;
   document.documentElement.classList.toggle('colorblind', a.colorblind);
+  document.documentElement.classList.toggle('dark', a.dark);
 }
 
 export function AppearanceToggle() {
@@ -79,6 +82,15 @@ export function AppearanceToggle() {
         title="Affiche les gros événements aussi sur ton téléphone"
       >
         {appearance.playerEchoes ? '✨ Echoes : on' : '✨ Echoes phone'}
+      </button>
+      <button
+        type="button"
+        onClick={() => toggle('dark')}
+        aria-pressed={appearance.dark}
+        className="rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs text-zinc-700 hover:bg-zinc-50"
+        title="Mode sombre (basique pour cette V1)"
+      >
+        {appearance.dark ? '🌙 Sombre : on' : '🌙 Sombre'}
       </button>
     </span>
   );

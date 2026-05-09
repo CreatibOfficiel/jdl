@@ -37,3 +37,25 @@ html.colorblind .suit-clubs::after { content: " ▲"; }
     scroll-behavior: auto !important;
   }
 }
+
+/* P2 — a11y: visible focus rings via :focus-visible. Browsers strip default focus rings
+   on click but keep them on keyboard navigation. We add a uniform ring on every
+   interactive primitive so keyboard-only flows are observable. */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 0.375rem;
+}
+
+/* Dark mode (P4) — opt-in via .dark on html. Tailwind v4 already supports prefers-color-scheme
+   but we expose a manual override for the per-user toggle. Components using CSS literals
+   like bg-white aren't migrated yet — full dark theme audit is a follow-up. */
+html.dark body {
+  background: #0f0f10;
+  color: #e5e5e5;
+}
