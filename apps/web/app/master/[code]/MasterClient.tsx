@@ -20,6 +20,7 @@ import { SipChart } from '@/components/master/SipChart';
 import { useColyseusRoom } from '@/hooks/useColyseusRoom';
 import { useModalEcho } from '@/hooks/useModalEcho';
 import { useReactions } from '@/hooks/useReactions';
+import { useSounds } from '@/hooks/useSounds';
 import { colyseusStateToBoard } from '@/lib/colyseusToBoard';
 import { cumulativeSeries } from '@/lib/sipStats';
 import type { ClientGameEvent, ClientGameState, ClientPlayer, ClientSipEvent } from '@/types/colyseus';
@@ -45,10 +46,27 @@ export function MasterClient({ code }: MasterClientProps) {
     validCode,
   );
   const reactions = useReactions(room);
+  const sounds = useSounds();
   const [origin, setOrigin] = useState('');
   useEffect(() => {
     if (typeof window !== 'undefined') setOrigin(window.location.origin);
   }, []);
+
+  // Audio cue on epic/high events. Same trigger source as ModalEcho.
+  const lastSoundIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!state) return;
+    let lastEvent: { id: string; importance: string } | null = null;
+    state.eventLog.forEach((e) => {
+      lastEvent = { id: e.id, importance: e.importance as string };
+    });
+    if (!lastEvent) return;
+    const ev = lastEvent as { id: string; importance: string };
+    if (ev.id === lastSoundIdRef.current) return;
+    lastSoundIdRef.current = ev.id;
+    if (ev.importance === 'epic') sounds.play('victory', 0.5);
+    else if (ev.importance === 'high') sounds.play('modal-open', 0.4);
+  }, [state, sounds]);
 
   // Keep the TV awake while connected
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
