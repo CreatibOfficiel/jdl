@@ -25,8 +25,11 @@ import { ShopModal } from '@/components/modals/ShopModal';
 import { TreasureModal } from '@/components/modals/TreasureModal';
 import { WitchOfferModal } from '@/components/modals/WitchOfferModal';
 import { WitchReceiveModal } from '@/components/modals/WitchReceiveModal';
+import { ModalEcho } from '@/components/master/ModalEcho';
+import { loadAppearance } from '@/components/AppearanceToggle';
 import { useColyseusRoom } from '@/hooks/useColyseusRoom';
 import { useEquivalenceQueue } from '@/hooks/useEquivalenceQueue';
+import { useModalEcho } from '@/hooks/useModalEcho';
 import { useSounds } from '@/hooks/useSounds';
 import { colyseusStateToBoard } from '@/lib/colyseusToBoard';
 import type { ClientGameState, ClientPlayer, ClientSipEvent } from '@/types/colyseus';
@@ -78,6 +81,10 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
   const [loadedDieOpen, setLoadedDieOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
   const sounds = useSounds();
+  const [echoesEnabled, setEchoesEnabled] = useState(false);
+  useEffect(() => {
+    setEchoesEnabled(loadAppearance().playerEchoes);
+  }, []);
 
   // Reset hasRolledOrder when phase moves on
   useEffect(() => {
@@ -153,6 +160,29 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
     state.sipEvents.forEach((e) => arr.push(e));
     return arr;
   }, [state.sipEvents, state.sipEventsTotalCount]);
+
+  const eventLogArr = useMemo(() => {
+    const out: Array<{
+      id: string;
+      text: string;
+      importance: 'low' | 'normal' | 'high' | 'epic';
+      playerId: string;
+      kind: string;
+      timestamp: number;
+    }> = [];
+    state.eventLog.forEach((e) => {
+      out.push({
+        id: e.id,
+        text: e.text,
+        importance: e.importance as 'low' | 'normal' | 'high' | 'epic',
+        playerId: e.playerId,
+        kind: e.kind,
+        timestamp: e.timestamp,
+      });
+    });
+    return out;
+  }, [state.eventLog]);
+  const echo = useModalEcho(echoesEnabled ? eventLogArr : []);
   const equivQueue = useEquivalenceQueue(sipEventsArr, room.sessionId, normalized);
   const turnOrderArray: string[] = [];
   state.turnOrder.forEach((id) => {
@@ -238,6 +268,7 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
         onDone={equivQueue.pop}
         onSkip={equivQueue.pop}
       />
+      {echoesEnabled && <ModalEcho echo={echo} />}
 
       <PlayersBar
         players={state.players}
