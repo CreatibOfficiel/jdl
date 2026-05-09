@@ -16,6 +16,9 @@ export {
   type DifficultyMeta,
   GAME_CONFIG_BY_DIFFICULTY,
   isDifficultyLevel,
+  SAFETY_BY_DIFFICULTY,
+  type SafetyCaps,
+  SAFETY_WINDOW_MS,
 } from './types/difficulty';
 export {
   EQUIVALENCE_KINDS,

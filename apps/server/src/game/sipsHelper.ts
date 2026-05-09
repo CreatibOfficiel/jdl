@@ -1,10 +1,52 @@
-import { EQUIVALENCE_TABLE, type EquivalenceKind, isEquivalenceKind } from '@jeu-soiree/shared';
+import {
+  EQUIVALENCE_TABLE,
+  type EquivalenceKind,
+  isDifficultyLevel,
+  isEquivalenceKind,
+  SAFETY_BY_DIFFICULTY,
+  SAFETY_WINDOW_MS,
+} from '@jeu-soiree/shared';
 import type { GameRoom } from '../rooms/GameRoom';
 import type { Player } from '../schemas/Player';
 import { SipEvent } from '../schemas/SipEvent';
 import { pushEvent } from './eventLog';
 
 const SIP_EVENTS_CAP = 200;
+
+/** Tumbling-window decay: if the last window opened > SAFETY_WINDOW_MS ago, reset the counter. */
+function decayWindow(player: Player, now: number): void {
+  if (now - player.recentWindowStart > SAFETY_WINDOW_MS) {
+    player.sipsAbsorbedRecent = 0;
+    player.recentWindowStart = now;
+  }
+}
+
+/** Returns the (possibly reduced) sip count after applying the per-difficulty soft cap.
+ *  When the cap fires, the EventLog gets a non-shaming "déjà bu beaucoup" notice and the
+ *  Player.capsTriggered counter is bumped. Bromance ricochets and bromance_drink sources are
+ *  not capped recursively (the original sip already passed through the cap). */
+function applySoftCap(room: GameRoom, player: Player, sips: number, source: string): number {
+  if (source === 'bromance_drink') return sips; // already-capped upstream
+  const level = isDifficultyLevel(room.state.difficultyLevel) ? room.state.difficultyLevel : 'medium';
+  const caps = SAFETY_BY_DIFFICULTY[level];
+  const now = Date.now();
+  decayWindow(player, now);
+  const projected = player.sipsAbsorbedRecent + sips;
+  if (projected <= caps.maxSipsPer10Min) {
+    return sips;
+  }
+  // Halve (floor to at least 1). The "absorbed" counter still bumps by the REDUCED amount so
+  // a long string of capped sips doesn't ratchet caps to zero.
+  const reduced = Math.max(1, Math.floor(sips / 2));
+  player.capsTriggered += 1;
+  pushEvent(room.state, {
+    playerId: player.id,
+    kind: 'safety_soft_cap',
+    text: `⚠️ ${player.name} a déjà bu beaucoup ces 10 dernières minutes — sip réduit (${sips}→${reduced})`,
+    importance: 'high',
+  });
+  return reduced;
+}
 
 interface RecordSipArgs {
   /** Empty if the sip is auto-drink (e.g. landed on a red card). */
@@ -48,12 +90,21 @@ function resolvePref(player: Player): EquivalenceKind {
 function applySipToPlayer(
   room: GameRoom,
   player: Player,
-  sips: number,
+  rawSips: number,
   kind: string,
   fallbackEmoji: string,
   note: string,
 ): void {
+  const sips = applySoftCap(room, player, rawSips, kind);
+  // Track absorbed sips against the running window AFTER the cap so the next call sees the
+  // (possibly reduced) amount. Sit-out players don't bump (no actual consumption).
   const pref = resolvePref(player);
+  if (pref !== 'sit_out') {
+    const now = Date.now();
+    decayWindow(player, now);
+    if (player.recentWindowStart === 0) player.recentWindowStart = now;
+    player.sipsAbsorbedRecent += sips;
+  }
   const rule = EQUIVALENCE_TABLE[pref];
   const countAsSips = room.state.countEquivalenceAsSips;
   const tail = note ? ` (${note})` : '';

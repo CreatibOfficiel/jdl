@@ -24,4 +24,10 @@ export class Player extends Schema {
   @type('string') equivalencePreference: string = 'drinks';
   /** Cumulative equivalence units (e.g. pushups) the player owes — populated when preference != 'drinks'. */
   @type('number') equivalenceUnitsCompleted: number = 0;
+  /** Sips absorbed inside the active safety window (tumbling 10 min). Resets on window expiry. */
+  @type('number') sipsAbsorbedRecent: number = 0;
+  /** Timestamp at which the current safety window opened. */
+  @type('number') recentWindowStart: number = 0;
+  /** How many times this player triggered the soft cap during the game. */
+  @type('number') capsTriggered: number = 0;
 }

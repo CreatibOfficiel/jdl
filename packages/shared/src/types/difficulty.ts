@@ -4,6 +4,25 @@ export type DifficultyLevel = 'soft' | 'medium' | 'hardcore';
 
 export const DIFFICULTY_LEVELS: ReadonlyArray<DifficultyLevel> = ['soft', 'medium', 'hardcore'];
 
+/** Harm-reduction caps grounded in NHS / NIAAA / Drinkaware guidance.
+ *  Conversion convention used here: 4 sips ≈ 1 standard drink ≈ 1 unit metabolised per hour. */
+export interface SafetyCaps {
+  /** When a player would absorb more than this in a 10-min tumbling window, the next sip is halved. */
+  maxSipsPer10Min: number;
+  /** A 💧 hydration prompt is pushed into the EventLog every N turns (global, not per-player). */
+  hydrationEveryNTurns: number;
+}
+
+/** ~4 sips/10min = ~1 drink/10min = caps "worst-case" pace ≈ 6 drinks/h, well above WHO low-risk
+ *  but mirrors the NIAAA "binge" pace at hardcore. Soft halves it; hardcore approaches it. */
+export const SAFETY_BY_DIFFICULTY: Record<DifficultyLevel, SafetyCaps> = {
+  soft: { maxSipsPer10Min: 4, hydrationEveryNTurns: 4 },
+  medium: { maxSipsPer10Min: 6, hydrationEveryNTurns: 6 },
+  hardcore: { maxSipsPer10Min: 8, hydrationEveryNTurns: 8 },
+};
+
+export const SAFETY_WINDOW_MS = 10 * 60 * 1000;
+
 export interface DifficultyMeta {
   level: DifficultyLevel;
   emoji: string;

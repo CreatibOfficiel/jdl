@@ -40,4 +40,6 @@ export class GameState extends Schema {
   @type('number') witchPotionSips: number = 5;
   /** Sips dealt by the malus_point item. */
   @type('number') ptMalusSips: number = 6;
+  /** Total hydration prompts pushed by the safety throttle this game. */
+  @type('number') totalHydrationPrompts: number = 0;
 }

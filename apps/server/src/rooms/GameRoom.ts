@@ -41,6 +41,8 @@ export class GameRoom extends Room<GameState, RoomMetadata> {
    *  Consumed by persistFinishedGame in Stage A4 so post-game stats remain exact. */
   readonly allSipEvents: SipEvent[] = [];
   difficulty: 'soft' | 'medium' | 'hardcore' = 'medium';
+  /** Counter incremented on every advanceTurn; drives hydration cadence. */
+  totalTurnCount: number = 0;
 
   override async onCreate(options: CreateOptions): Promise<void> {
     const code = options.code ?? '';

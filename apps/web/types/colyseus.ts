@@ -20,6 +20,9 @@ export interface ClientPlayer {
   diceRolls: number;
   equivalencePreference: string;
   equivalenceUnitsCompleted: number;
+  sipsAbsorbedRecent: number;
+  recentWindowStart: number;
+  capsTriggered: number;
 }
 
 export interface ClientSipEvent {
@@ -92,4 +95,5 @@ export interface ClientGameState {
   sipsPerCard: number;
   witchPotionSips: number;
   ptMalusSips: number;
+  totalHydrationPrompts: number;
 }

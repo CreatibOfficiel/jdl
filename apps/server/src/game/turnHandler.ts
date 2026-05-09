@@ -1,4 +1,5 @@
 import { applyMove, nextTurnIndex } from '@jeu-soiree/game-logic';
+import { isDifficultyLevel, SAFETY_BY_DIFFICULTY } from '@jeu-soiree/shared';
 import type { Client } from 'colyseus';
 import type { GameRoom } from '../rooms/GameRoom';
 import type { Player } from '../schemas/Player';
@@ -148,6 +149,20 @@ function handleHoleTurn(room: GameRoom, player: Player): void {
 function advanceTurn(room: GameRoom): void {
   const total = room.state.turnOrder.length;
   if (total === 0) return;
+
+  room.totalTurnCount += 1;
+
+  // Hydration prompt every N global turns. Per-difficulty cadence; never per-player.
+  const level = isDifficultyLevel(room.state.difficultyLevel) ? room.state.difficultyLevel : 'medium';
+  const cadence = SAFETY_BY_DIFFICULTY[level].hydrationEveryNTurns;
+  if (cadence > 0 && room.totalTurnCount % cadence === 0) {
+    pushEvent(room.state, {
+      kind: 'hydration',
+      text: `💧 Pause hydratation — un verre d'eau pour tout le monde 💧`,
+      importance: 'high',
+    });
+    room.state.totalHydrationPrompts += 1;
+  }
 
   room.state.currentTurnIndex = nextTurnIndex(room.state.currentTurnIndex, total);
 
