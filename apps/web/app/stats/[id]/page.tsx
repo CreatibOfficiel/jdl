@@ -49,9 +49,17 @@ export default async function GameStatsPage({ params, searchParams }: GameStatsP
   return (
     <main className="mx-auto max-w-4xl px-6 py-10">
       <header className="mb-6">
-        <Link href="/stats" className="text-sm text-blue-600 underline">
-          ← Toutes les parties
-        </Link>
+        <div className="flex items-center justify-between">
+          <Link href="/stats" className="text-sm text-blue-600 underline">
+            ← Toutes les parties
+          </Link>
+          <Link
+            href={`/replay/${encodeURIComponent(id)}`}
+            className="rounded-full border border-blue-300 bg-blue-50 px-3 py-1 text-sm text-blue-700 hover:bg-blue-100"
+          >
+            ⏯ Replay
+          </Link>
+        </div>
         <h1 className="mt-2 text-3xl font-bold">
           Partie <span className="font-mono text-blue-600">{game.seed}</span>
         </h1>
