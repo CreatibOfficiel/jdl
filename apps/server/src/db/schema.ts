@@ -37,6 +37,18 @@ export const gamePlayerStats = sqliteTable(
   }),
 );
 
+export const sipEvents = sqliteTable('sip_events', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  gameId: text('game_id').notNull(),
+  ts: integer('ts').notNull(),
+  fromId: text('from_id'),
+  toId: text('to_id').notNull(),
+  count: integer('count').notNull(),
+  source: text('source').notNull(),
+  equivalence: text('equivalence'),
+});
+
 export type DbGame = typeof games.$inferSelect;
 export type DbPlayer = typeof players.$inferSelect;
 export type DbGamePlayerStats = typeof gamePlayerStats.$inferSelect;
+export type DbSipEvent = typeof sipEvents.$inferSelect;

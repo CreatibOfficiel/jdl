@@ -65,12 +65,17 @@ export default async function StatsPage() {
           {stats.recent.map((g) => {
             const duration = g.endedAt ? Math.round((g.endedAt - g.startedAt) / 60000) : null;
             return (
-              <li key={g.id} className="flex flex-wrap items-baseline gap-3 px-4 py-3 text-sm">
-                <span className="font-mono text-blue-600">{g.seed}</span>
-                <span className="text-zinc-700">{g.playerCount} joueurs</span>
-                {duration !== null && <span className="text-zinc-500">{duration} min</span>}
-                {g.winnerId && <span className="text-amber-700">🏆 {g.winnerId}</span>}
-                <span className="ml-auto text-xs text-zinc-400">{formatDate(g.startedAt)}</span>
+              <li key={g.id}>
+                <Link
+                  href={`/stats/${encodeURIComponent(g.id)}`}
+                  className="flex flex-wrap items-baseline gap-3 px-4 py-3 text-sm hover:bg-zinc-50"
+                >
+                  <span className="font-mono text-blue-600">{g.seed}</span>
+                  <span className="text-zinc-700">{g.playerCount} joueurs</span>
+                  {duration !== null && <span className="text-zinc-500">{duration} min</span>}
+                  {g.winnerId && <span className="text-amber-700">🏆 {g.winnerId}</span>}
+                  <span className="ml-auto text-xs text-zinc-400">{formatDate(g.startedAt)}</span>
+                </Link>
               </li>
             );
           })}

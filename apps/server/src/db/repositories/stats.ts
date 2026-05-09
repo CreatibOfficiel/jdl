@@ -1,6 +1,6 @@
-import { desc, eq } from 'drizzle-orm';
+import { asc, desc, eq } from 'drizzle-orm';
 import { db } from '../index';
-import { gamePlayerStats, games, players } from '../schema';
+import { gamePlayerStats, games, players, sipEvents } from '../schema';
 
 export function getTopDrinkers(limit = 10) {
   return db.select().from(players).orderBy(desc(players.totalSipsTaken)).limit(limit).all();
@@ -20,4 +20,17 @@ export function getRecentGames(limit = 10) {
 
 export function getGameStats(gameId: string) {
   return db.select().from(gamePlayerStats).where(eq(gamePlayerStats.gameId, gameId)).all();
+}
+
+export function getGameSipEvents(gameId: string) {
+  return db
+    .select()
+    .from(sipEvents)
+    .where(eq(sipEvents.gameId, gameId))
+    .orderBy(asc(sipEvents.ts))
+    .all();
+}
+
+export function getGameById(gameId: string) {
+  return db.select().from(games).where(eq(games.id, gameId)).get();
 }

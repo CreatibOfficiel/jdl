@@ -219,6 +219,7 @@ export class GameRoom extends Room<GameState, RoomMetadata> {
         roomId: this.roomId,
         startedAt: this.startedAt,
         state: this.state,
+        allSipEvents: this.allSipEvents,
       });
       this.persisted = true;
       console.log(`[GameRoom ${this.state.boardSeed}] persisted to SQLite`);

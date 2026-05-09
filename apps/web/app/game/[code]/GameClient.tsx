@@ -13,6 +13,7 @@ import { GameSkeleton } from '@/components/game/GameSkeleton';
 import { Inventory } from '@/components/game/Inventory';
 import { MuteToggle } from '@/components/game/MuteToggle';
 import { PlayersBar } from '@/components/game/PlayersBar';
+import { StatsPanel } from '@/components/game/StatsPanel';
 import { BromanceModal } from '@/components/modals/BromanceModal';
 import { LoadedDieModal } from '@/components/modals/LoadedDieModal';
 import { PilulesModal } from '@/components/modals/PilulesModal';
@@ -71,6 +72,7 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
   const [pickItemType, setPickItemType] = useState<string | null>(null);
   const [witchOfferOpen, setWitchOfferOpen] = useState(false);
   const [loadedDieOpen, setLoadedDieOpen] = useState(false);
+  const [statsOpen, setStatsOpen] = useState(false);
 
   // Reset hasRolledOrder when phase moves on
   useEffect(() => {
@@ -166,6 +168,15 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
       <header className="mb-3 flex items-baseline justify-between gap-4">
         <h1 className="font-mono text-xl font-bold text-blue-600">{state.boardSeed}</h1>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setStatsOpen(true)}
+            className="rounded-lg border border-zinc-300 bg-white px-3 py-1 text-xs text-zinc-700 hover:bg-zinc-50"
+            aria-label="Ouvrir les stats"
+            title="Stats live"
+          >
+            📊
+          </button>
           <MuteToggle />
           <button
             type="button"
@@ -176,6 +187,7 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
           </button>
         </div>
       </header>
+      <StatsPanel state={state} open={statsOpen} onClose={() => setStatsOpen(false)} />
 
       <PlayersBar
         players={state.players}

@@ -1,6 +1,8 @@
 import cors from 'cors';
 import express, { type Express } from 'express';
 import {
+  getGameById,
+  getGameSipEvents,
   getGameStats,
   getRecentGames,
   getTopDrinkers,
@@ -32,8 +34,21 @@ export function createApiApp(): Express {
       res.status(400).json({ error: 'Missing id' });
       return;
     }
-    const stats = getGameStats(id);
-    res.json({ gameId: id, players: stats });
+    const game = getGameById(id);
+    if (!game) {
+      res.status(404).json({ error: 'Game not found' });
+      return;
+    }
+    res.json({ game, players: getGameStats(id) });
+  });
+
+  app.get('/api/games/:id/sips', (req, res) => {
+    const id = req.params.id;
+    if (!id) {
+      res.status(400).json({ error: 'Missing id' });
+      return;
+    }
+    res.json({ gameId: id, events: getGameSipEvents(id) });
   });
 
   return app;

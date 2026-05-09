@@ -48,8 +48,19 @@ sqlite.exec(`
     won INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (game_id, player_id)
   );
+  CREATE TABLE IF NOT EXISTS sip_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    game_id TEXT NOT NULL,
+    ts INTEGER NOT NULL,
+    from_id TEXT,
+    to_id TEXT NOT NULL,
+    count INTEGER NOT NULL,
+    source TEXT NOT NULL,
+    equivalence TEXT
+  );
   CREATE INDEX IF NOT EXISTS idx_games_started_at ON games(started_at DESC);
   CREATE INDEX IF NOT EXISTS idx_gps_player ON game_player_stats(player_id);
+  CREATE INDEX IF NOT EXISTS idx_sip_events_game ON sip_events(game_id);
 `);
 
 export const db = drizzle(sqlite, { schema });
