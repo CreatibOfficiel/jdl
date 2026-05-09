@@ -1,0 +1,12 @@
+**/node_modules
+**/.next
+**/dist
+**/.turbo
+**/coverage
+**/.env*
+**/.git
+**/.vscode
+**/.idea
+**/data
+**/*.log
+README.md

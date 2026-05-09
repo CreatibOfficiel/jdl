@@ -1,0 +1,47 @@
+services:
+  jeu-soiree-init:
+    image: busybox:1.37
+    container_name: jeu-soiree-init
+    restart: "no"
+    command: sh -c "mkdir -p /data && chown -R 1001:1001 /data && chmod 750 /data"
+    volumes:
+      - ./data:/data
+
+  jeu-soiree-server:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    container_name: jeu-soiree-server
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=2567
+      - DB_PATH=/app/apps/server/data/jeu-soiree.db
+    volumes:
+      - ./data:/app/apps/server/data
+    networks:
+      - proxy_net
+    depends_on:
+      jeu-soiree-init:
+        condition: service_completed_successfully
+
+  jeu-soiree-web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: jeu-soiree-web
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - COLYSEUS_HTTP_URL=http://jeu-soiree-server:2567
+      - HOSTNAME=0.0.0.0
+      - PORT=3000
+    networks:
+      - proxy_net
+    depends_on:
+      jeu-soiree-server:
+        condition: service_started
+
+networks:
+  proxy_net:
+    external: true
