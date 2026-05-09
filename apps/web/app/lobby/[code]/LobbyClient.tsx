@@ -182,13 +182,23 @@ export function LobbyClient({ code, initialProfile }: LobbyClientProps) {
             En attente que le host démarre la partie. {state.players.size}/10 joueurs.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={handleLeave}
-          className="rounded-lg border border-zinc-300 bg-white px-3 py-1 text-sm text-zinc-700 hover:bg-zinc-50"
-        >
-          Quitter
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/rules"
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-lg border border-zinc-300 bg-white px-3 py-1 text-sm text-zinc-700 hover:bg-zinc-50"
+          >
+            📖 Règles
+          </Link>
+          <button
+            type="button"
+            onClick={handleLeave}
+            className="rounded-lg border border-zinc-300 bg-white px-3 py-1 text-sm text-zinc-700 hover:bg-zinc-50"
+          >
+            Quitter
+          </button>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
