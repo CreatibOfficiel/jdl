@@ -13,10 +13,30 @@ export interface ClientPlayer {
   prisonTurnsLeft: number;
   holeTurnsLeft: number;
   pendingForcedDice: number;
+  doubleNextSip: boolean;
   sipsTaken: number;
   sipsGiven: number;
   shopPurchases: number;
   diceRolls: number;
+  equivalencePreference: string;
+  equivalenceUnitsCompleted: number;
+  equivalencePerSource: string;
+  sipsAbsorbedRecent: number;
+  recentWindowStart: number;
+  capsTriggered: number;
+  consecutiveCaps: number;
+  autoSwapsTriggered: number;
+  exited: boolean;
+  exitedAt: number;
+}
+
+export interface ClientSipEvent {
+  ts: number;
+  fromId: string;
+  toId: string;
+  count: number;
+  source: string;
+  equivalence: string;
 }
 
 export interface ClientBoardCase {
@@ -73,4 +93,14 @@ export interface ClientGameState {
   treasuresOpened: ClientArraySchema<number>;
   railRound: number;
   railCards: ClientArraySchema<string>;
+  sipEvents: ClientArraySchema<ClientSipEvent>;
+  sipEventsTotalCount: number;
+  countEquivalenceAsSips: boolean;
+  difficultyLevel: string;
+  sipsPerCard: number;
+  witchPotionSips: number;
+  ptMalusSips: number;
+  totalHydrationPrompts: number;
+  maxSipsPerPlayerPerGame: number;
+  checklistAcked: boolean;
 }

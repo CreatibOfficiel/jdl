@@ -1,10 +1,16 @@
 'use client';
 
-import { isValidGameCode, normalizeGameCode } from '@jeu-soiree/shared';
+import {
+  DIFFICULTY_PRESETS,
+  isDifficultyLevel,
+  isValidGameCode,
+  normalizeGameCode,
+} from '@jeu-soiree/shared';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { Board } from '@/components/board/Board';
+import { HostChecklistModal } from '@/components/lobby/HostChecklistModal';
 import { PlayersList } from '@/components/lobby/PlayersList';
 import { QRCodeShare } from '@/components/lobby/QRCodeShare';
 import { useColyseusRoom } from '@/hooks/useColyseusRoom';
@@ -18,6 +24,10 @@ interface LobbyClientProps {
     suit?: string;
     color?: string;
     emoji?: string;
+    equivalencePreference?: string;
+    equivalencePerSource?: string;
+    /** Only honoured when this client is the room creator. */
+    difficulty?: string;
   };
 }
 
@@ -38,19 +48,28 @@ export function LobbyClient({ code, initialProfile }: LobbyClientProps) {
   );
 
   const options = useMemo(
-    () => ({
-      code: normalized,
-      name: initialProfile.name ?? '',
-      suit: initialProfile.suit ?? '',
-      color: initialProfile.color ?? '',
-      emoji: initialProfile.emoji ?? '',
-    }),
+    () => {
+      const base: Record<string, string> = {
+        code: normalized,
+        name: initialProfile.name ?? '',
+        suit: initialProfile.suit ?? '',
+        color: initialProfile.color ?? '',
+        emoji: initialProfile.emoji ?? '',
+        equivalencePreference: initialProfile.equivalencePreference ?? 'drinks',
+      };
+      if (initialProfile.difficulty) base.difficulty = initialProfile.difficulty;
+      if (initialProfile.equivalencePerSource) base.equivalencePerSource = initialProfile.equivalencePerSource;
+      return base;
+    },
     [
       normalized,
       initialProfile.name,
       initialProfile.suit,
       initialProfile.color,
       initialProfile.emoji,
+      initialProfile.equivalencePreference,
+      initialProfile.difficulty,
+      initialProfile.equivalencePerSource,
     ],
   );
 
@@ -68,6 +87,7 @@ export function LobbyClient({ code, initialProfile }: LobbyClientProps) {
         suit: initialProfile.suit ?? '',
         color: initialProfile.color ?? '',
         emoji: initialProfile.emoji ?? '',
+        equivalencePreference: initialProfile.equivalencePreference ?? 'drinks',
       });
       router.replace(`/game/${normalized}?${params.toString()}`);
     }
@@ -135,11 +155,21 @@ export function LobbyClient({ code, initialProfile }: LobbyClientProps) {
 
   const me = state.players.get(room.sessionId);
   const isHost = me?.isHost ?? false;
-  const canStart = isHost && state.players.size >= 2 && state.phase === 'lobby';
+  const checklistAcked = state.checklistAcked ?? false;
+  const canStart = isHost && state.players.size >= 2 && state.phase === 'lobby' && checklistAcked;
   const board = colyseusStateToBoard(state);
+  const difficultyMeta = isDifficultyLevel(state.difficultyLevel)
+    ? DIFFICULTY_PRESETS[state.difficultyLevel]
+    : null;
 
   function handleStart() {
     room?.send('start_game');
+  }
+  const [checklistOpen, setChecklistOpen] = useState(false);
+  function handleAckChecklist(ceiling: number) {
+    if (ceiling > 0) room?.send('host_set_ceiling', { ceiling });
+    room?.send('host_ack_checklist');
+    setChecklistOpen(false);
   }
 
   function handleLeave() {
@@ -151,18 +181,35 @@ export function LobbyClient({ code, initialProfile }: LobbyClientProps) {
     <main className="mx-auto max-w-5xl px-6 py-8">
       <header className="mb-6 flex flex-wrap items-baseline justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Lobby</h1>
+          <h1 className="text-2xl font-bold">
+            Lobby
+            {difficultyMeta && (
+              <span className="ml-3 rounded-full bg-zinc-100 px-3 py-1 align-middle text-sm font-medium text-zinc-700">
+                {difficultyMeta.emoji} {difficultyMeta.label}
+              </span>
+            )}
+          </h1>
           <p className="text-sm text-zinc-500">
             En attente que le host démarre la partie. {state.players.size}/10 joueurs.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={handleLeave}
-          className="rounded-lg border border-zinc-300 bg-white px-3 py-1 text-sm text-zinc-700 hover:bg-zinc-50"
-        >
-          Quitter
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/rules"
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-lg border border-zinc-300 bg-white px-3 py-1 text-sm text-zinc-700 hover:bg-zinc-50"
+          >
+            📖 Règles
+          </Link>
+          <button
+            type="button"
+            onClick={handleLeave}
+            className="rounded-lg border border-zinc-300 bg-white px-3 py-1 text-sm text-zinc-700 hover:bg-zinc-50"
+          >
+            Quitter
+          </button>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
@@ -177,14 +224,34 @@ export function LobbyClient({ code, initialProfile }: LobbyClientProps) {
           </section>
 
           {isHost ? (
-            <button
-              type="button"
-              onClick={handleStart}
-              disabled={!canStart}
-              className="w-full rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-zinc-300"
-            >
-              {state.players.size < 2 ? "En attente d'un 2e joueur…" : 'Démarrer la partie'}
-            </button>
+            <div className="space-y-2">
+              {!checklistAcked && (
+                <button
+                  type="button"
+                  onClick={() => setChecklistOpen(true)}
+                  className="w-full rounded-lg border-2 border-amber-400 bg-amber-50 px-4 py-3 font-semibold text-amber-800 hover:bg-amber-100"
+                >
+                  ⚠️ Checklist soirée à valider
+                </button>
+              )}
+              {state.maxSipsPerPlayerPerGame > 0 && (
+                <p className="text-xs text-zinc-500">
+                  Plafond actif : {state.maxSipsPerPlayerPerGame} sips / joueur
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={handleStart}
+                disabled={!canStart}
+                className="w-full rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-zinc-300"
+              >
+                {state.players.size < 2
+                  ? "En attente d'un 2e joueur…"
+                  : !checklistAcked
+                    ? 'Valide la checklist d\'abord'
+                    : 'Démarrer la partie'}
+              </button>
+            </div>
           ) : (
             <p className="rounded-lg bg-zinc-100 px-3 py-3 text-center text-sm text-zinc-600">
               Le host démarre la partie quand tout le monde est prêt.
@@ -207,6 +274,12 @@ export function LobbyClient({ code, initialProfile }: LobbyClientProps) {
           </div>
         </section>
       </div>
+
+      <HostChecklistModal
+        open={checklistOpen && isHost}
+        onAck={handleAckChecklist}
+        onClose={() => setChecklistOpen(false)}
+      />
     </main>
   );
 }

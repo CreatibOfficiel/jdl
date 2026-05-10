@@ -1,10 +1,32 @@
-import type { Board, BoardCase, CaseType, ThirstZone } from '@jeu-soiree/shared';
+import type { Board, BoardCase, CaseType, DifficultyLevel, ThirstZone } from '@jeu-soiree/shared';
 import { BOARD_CONSTRAINTS, BOARD_SIZE, NUMBER_VALUES } from '@jeu-soiree/shared';
 import { validateBoard } from './constraints';
 import { pickPositionWithMinDistance } from './poissonDisk';
 import { SeededRandom } from './seed';
 
 const DEFAULT_MAX_ATTEMPTS = 50;
+
+interface DifficultyBoardProfile {
+  /** Bias the thirst zone length (clamps inside the existing min/max range). */
+  tzLengthMin: number;
+  tzLengthMax: number;
+  /** Card cardinality nudge — MUST sum to 0 across reds/greens/neutrals. */
+  redExtra: number;
+  greenExtra: number;
+  neutralExtra: number;
+}
+
+const DEFAULT_TZ_MIN = BOARD_CONSTRAINTS.thirstZoneLengthMin;
+const DEFAULT_TZ_MAX = BOARD_CONSTRAINTS.thirstZoneLengthMax;
+
+const DIFFICULTY_BOARD_PROFILES: Record<DifficultyLevel, DifficultyBoardProfile> = {
+  // Medium = today's behaviour byte-for-byte. DO NOT touch.
+  medium: { tzLengthMin: DEFAULT_TZ_MIN, tzLengthMax: DEFAULT_TZ_MAX, redExtra: 0, greenExtra: 0, neutralExtra: 0 },
+  // Soft: smaller thirst zone, fewer reds + extra neutrals.
+  soft: { tzLengthMin: DEFAULT_TZ_MIN, tzLengthMax: DEFAULT_TZ_MIN, redExtra: -2, greenExtra: 0, neutralExtra: 2 },
+  // Hardcore: max thirst zone, more reds at the expense of greens.
+  hardcore: { tzLengthMin: DEFAULT_TZ_MAX, tzLengthMax: DEFAULT_TZ_MAX, redExtra: 2, greenExtra: -2, neutralExtra: 0 },
+};
 
 const OTHER_SPECIALS: ReadonlyArray<{ type: CaseType; count: number }> = [
   { type: 'formule1', count: 1 },
@@ -21,25 +43,33 @@ const REMAINING_REDS = 14;
 const REMAINING_GREENS = 14;
 const REMAINING_NEUTRALS = 12;
 
-export function generateBoard(seed: string, maxAttempts: number = DEFAULT_MAX_ATTEMPTS): Board {
+export function generateBoard(
+  seed: string,
+  difficulty: DifficultyLevel = 'medium',
+  maxAttempts: number = DEFAULT_MAX_ATTEMPTS,
+): Board {
+  const profile = DIFFICULTY_BOARD_PROFILES[difficulty];
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const attemptSeed = attempt === 0 ? seed : `${seed}:retry-${attempt}`;
+    const baseSeed = attempt === 0 ? seed : `${seed}:retry-${attempt}`;
+    // Mix difficulty into the RNG seed for non-medium variants so the same `seed` produces
+    // different boards across difficulties — but `medium` keeps the legacy seed exactly so
+    // historical seed → board mappings stay byte-stable. (Regression guard.)
+    const attemptSeed = difficulty === 'medium' ? baseSeed : `${baseSeed}::${difficulty}`;
     const rng = new SeededRandom(attemptSeed);
-    const result = tryGenerate(rng, seed);
+    const result = tryGenerate(rng, seed, profile);
     if (result === null) continue;
     if (validateBoard(result).ok) return result;
   }
   throw new Error(
-    `Failed to generate a valid board for seed "${seed}" after ${maxAttempts} attempts`,
+    `Failed to generate a valid board for seed "${seed}" (difficulty=${difficulty}) after ${maxAttempts} attempts`,
   );
 }
 
-function tryGenerate(rng: SeededRandom, seed: string): Board | null {
+function tryGenerate(rng: SeededRandom, seed: string, profile: DifficultyBoardProfile): Board | null {
   // -- Step 1: Thirst zone --------------------------------------------------
-  const tzLength = rng.nextInt(
-    BOARD_CONSTRAINTS.thirstZoneLengthMin,
-    BOARD_CONSTRAINTS.thirstZoneLengthMax,
-  );
+  // For medium, the bounds equal the canonical BOARD_CONSTRAINTS values, so this draw is
+  // identical to the pre-difficulty implementation (regression guard).
+  const tzLength = rng.nextInt(profile.tzLengthMin, profile.tzLengthMax);
   const tzStart = rng.nextInt(
     BOARD_CONSTRAINTS.thirstZoneStartMin,
     BOARD_CONSTRAINTS.thirstZoneStartMax,
@@ -173,7 +203,12 @@ function tryGenerate(rng: SeededRandom, seed: string): Board | null {
   for (let i = 1; i <= BOARD_SIZE; i++) {
     if (!placements.has(i)) remaining.push(i);
   }
-  const expectedRemaining = REMAINING_REDS + REMAINING_GREENS + REMAINING_NEUTRALS;
+  // Cardinality nudges shift between reds/greens/neutrals while preserving total
+  // (the three deltas always sum to 0 so remaining.length stays valid).
+  const reds = REMAINING_REDS + profile.redExtra;
+  const greens = REMAINING_GREENS + profile.greenExtra;
+  const neutrals = REMAINING_NEUTRALS + profile.neutralExtra;
+  const expectedRemaining = reds + greens + neutrals;
   if (remaining.length !== expectedRemaining) return null;
 
   const tzEnd = tzStart + tzLength - 1;
@@ -187,9 +222,9 @@ function tryGenerate(rng: SeededRandom, seed: string): Board | null {
   const remainingTz = shuffledTz.slice(minRedsInZone);
   const remainingPool = rng.shuffle([...remainingTz, ...outThirstZone]);
 
-  let redBudget = REMAINING_REDS - minRedsInZone;
-  let greenBudget = REMAINING_GREENS;
-  let neutralBudget = REMAINING_NEUTRALS;
+  let redBudget = reds - minRedsInZone;
+  let greenBudget = greens;
+  let neutralBudget = neutrals;
 
   const numberValues = [...NUMBER_VALUES];
   for (const idx of forcedRedTz) {

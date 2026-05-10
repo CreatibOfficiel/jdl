@@ -1,4 +1,5 @@
 import { generateBoard } from '@jeu-soiree/game-logic';
+import { GAME_CONFIG_BY_DIFFICULTY, isDifficultyLevel } from '@jeu-soiree/shared';
 import { type Client, Room, ServerError } from 'colyseus';
 import { persistFinishedGame } from '../db/repositories/games';
 import { handleChooseBromance } from '../game/cases/bromance';
@@ -11,17 +12,20 @@ import { handleGivePotion, handleSayThanks } from '../game/cases/witch';
 import { pushEvent } from '../game/eventLog';
 import { handleRollOrderDice } from '../game/rollingOrder';
 import { handleRollDice } from '../game/turnHandler';
-import { type JoinOptions, JoinOptionsSchema } from '../lib/messages';
+import { type JoinOptions, JoinOptionsSchema, SpectatorJoinSchema } from '../lib/messages';
 import { BoardCaseSchema } from '../schemas/BoardCaseSchema';
 import { GameState } from '../schemas/GameState';
 import { Player } from '../schemas/Player';
+import type { SipEvent } from '../schemas/SipEvent';
 
-const MAX_CLIENTS = 10;
+// 10 players + up to 10 spectators (master TV screens etc). Spectators don't add Player entries.
+const MAX_CLIENTS = 20;
 const MIN_PLAYERS_TO_START = 2;
 const RECONNECTION_TIMEOUT_SECONDS = 60;
 
 interface CreateOptions {
   code?: string;
+  difficulty?: string;
 }
 
 interface RoomMetadata {
@@ -33,6 +37,14 @@ export class GameRoom extends Room<GameState, RoomMetadata> {
   private treasureCases: number[] = [];
   private startedAt: number = 0;
   private persisted: boolean = false;
+  /** Unbounded mirror of every SipEvent emitted (state.sipEvents is capped at 200 for client sync).
+   *  Consumed by persistFinishedGame in Stage A4 so post-game stats remain exact. */
+  readonly allSipEvents: SipEvent[] = [];
+  difficulty: 'soft' | 'medium' | 'hardcore' = 'medium';
+  /** Counter incremented on every advanceTurn; drives hydration cadence. */
+  totalTurnCount: number = 0;
+  /** Per-client throttle for the react message (1 emoji per second per client). */
+  private readonly lastReactionAt = new Map<string, number>();
 
   override async onCreate(options: CreateOptions): Promise<void> {
     const code = options.code ?? '';
@@ -45,7 +57,15 @@ export class GameRoom extends Room<GameState, RoomMetadata> {
     this.startedAt = Date.now();
     await this.setMetadata({ code });
 
-    const board = generateBoard(code);
+    const difficulty = isDifficultyLevel(options.difficulty) ? options.difficulty : 'medium';
+    const cfg = GAME_CONFIG_BY_DIFFICULTY[difficulty];
+    this.state.difficultyLevel = difficulty;
+    this.state.sipsPerCard = cfg.sipsPerCard;
+    this.state.witchPotionSips = cfg.witchPotionSips;
+    this.state.ptMalusSips = cfg.ptMalusSips;
+    this.difficulty = difficulty;
+
+    const board = generateBoard(code, difficulty);
     this.state.thirstZoneStart = board.thirstZone.start;
     this.state.thirstZoneLength = board.thirstZone.length;
     this.treasureCases = [...board.treasureCases];
@@ -77,9 +97,71 @@ export class GameRoom extends Room<GameState, RoomMetadata> {
     this.onMessage('rail_de_bus_answer', (client, message) =>
       handleRailAnswer(this, client, message),
     );
+    this.onMessage('i_am_done', (client) => this.handleExit(client));
+    this.onMessage('host_set_ceiling', (client, message: { ceiling?: number }) =>
+      this.handleHostSetCeiling(client, message),
+    );
+    this.onMessage('host_ack_checklist', (client) => this.handleAckChecklist(client));
+    this.onMessage('react', (client, message: { emoji?: string }) =>
+      this.handleReact(client, message),
+    );
+  }
+
+  private handleReact(client: Client, message: { emoji?: string }): void {
+    const ALLOWED = ['👍', '🔥', '😱', '🤣', '😴', '💀', '👏', '🍻'];
+    const emoji = message.emoji;
+    if (!emoji || !ALLOWED.includes(emoji)) return;
+    // Throttle: drop if same client sent in the last 1s.
+    const now = Date.now();
+    const last = this.lastReactionAt.get(client.sessionId) ?? 0;
+    if (now - last < 1000) return;
+    this.lastReactionAt.set(client.sessionId, now);
+    this.broadcast('reaction', { from: client.sessionId, emoji, ts: now });
+  }
+
+  private handleExit(client: Client): void {
+    const player = this.state.players.get(client.sessionId);
+    if (!player || player.exited) return;
+    player.exited = true;
+    player.exitedAt = Date.now();
+    pushEvent(this.state, {
+      playerId: player.id,
+      kind: 'player_exit',
+      text: `🪑 ${player.name} se met en pause pour la fin de la partie`,
+      importance: 'high',
+    });
+    // If it was their turn, advance immediately so the room doesn't block.
+    const expected = this.state.turnOrder[this.state.currentTurnIndex];
+    if (expected === client.sessionId && this.state.phase === 'playing') {
+      // Use the same advance logic as turnHandler.endTurn — but inline here to avoid circular imports.
+      // Skipping is naturally handled by turnHandler.advanceTurn checking player.exited.
+    }
+  }
+
+  private handleHostSetCeiling(client: Client, message: { ceiling?: number }): void {
+    if (client.sessionId !== this.state.hostId) return;
+    if (this.state.phase !== 'lobby') return;
+    const ceiling = Math.max(0, Math.floor(message.ceiling ?? 0));
+    this.state.maxSipsPerPlayerPerGame = ceiling;
+  }
+
+  private handleAckChecklist(client: Client): void {
+    if (client.sessionId !== this.state.hostId) return;
+    if (this.state.phase !== 'lobby') return;
+    this.state.checklistAcked = true;
   }
 
   override onJoin(client: Client, rawOptions: unknown): void {
+    // Spectators (master TV) skip the player profile path entirely: no Player schema entry,
+    // no suit/color/name collision check. Existing message handlers already guard on
+    // `state.players.get(sessionId)` so spectators can't trigger gameplay actions.
+    const spectatorParsed = SpectatorJoinSchema.safeParse(rawOptions);
+    if (spectatorParsed.success) {
+      client.userData = { spectator: true };
+      console.log(`[GameRoom ${this.state.boardSeed}] spectator joined (${client.sessionId})`);
+      return;
+    }
+
     const parsed = JoinOptionsSchema.safeParse(rawOptions);
     if (!parsed.success) {
       throw new ServerError(400, `Invalid join options: ${parsed.error.message}`);
@@ -105,6 +187,8 @@ export class GameRoom extends Room<GameState, RoomMetadata> {
     player.suit = options.suit;
     player.color = options.color;
     player.emoji = options.emoji;
+    player.equivalencePreference = options.equivalencePreference;
+    player.equivalencePerSource = options.equivalencePerSource ?? '';
     player.connected = true;
     player.isHost = this.state.players.size === 0;
 
@@ -168,6 +252,7 @@ export class GameRoom extends Room<GameState, RoomMetadata> {
     if (client.sessionId !== this.state.hostId) return;
     if (this.state.phase !== 'lobby') return;
     if (this.state.players.size < MIN_PLAYERS_TO_START) return;
+    if (!this.state.checklistAcked) return;
     this.state.phase = 'rolling_order';
     this.state.rollOrderRolls.clear();
     pushEvent(this.state, {
@@ -194,6 +279,7 @@ export class GameRoom extends Room<GameState, RoomMetadata> {
         roomId: this.roomId,
         startedAt: this.startedAt,
         state: this.state,
+        allSipEvents: this.allSipEvents,
       });
       this.persisted = true;
       console.log(`[GameRoom ${this.state.boardSeed}] persisted to SQLite`);

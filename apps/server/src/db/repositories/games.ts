@@ -1,16 +1,20 @@
 import { eq, sql } from 'drizzle-orm';
 import type { GameState } from '../../schemas/GameState';
+import type { SipEvent } from '../../schemas/SipEvent';
 import { db, normalizePseudoId } from '../index';
-import { gamePlayerStats, games, players } from '../schema';
+import { gamePlayerStats, games, players, sipEvents } from '../schema';
 
 interface PersistFinishedGameInput {
   roomId: string;
   startedAt: number;
   state: GameState;
+  /** Unbounded mirror of every SipEvent emitted in the room. The state.sipEvents buffer
+   *  is capped at 200 for client-sync efficiency; we persist the full history instead. */
+  allSipEvents: ReadonlyArray<SipEvent>;
 }
 
 export function persistFinishedGame(input: PersistFinishedGameInput): void {
-  const { roomId, startedAt, state } = input;
+  const { roomId, startedAt, state, allSipEvents } = input;
   if (state.phase !== 'finished') return;
   const endedAt = Date.now();
 
@@ -45,13 +49,16 @@ export function persistFinishedGame(input: PersistFinishedGameInput): void {
         .onConflictDoNothing()
         .run();
 
-      // Increment lifetime totals
+      // Increment lifetime totals (always bump equivalence units regardless of the host's
+      // countEquivalenceAsSips toggle — the toggle only affects whether sipsTaken was bumped
+      // in the first place inside applySipToPlayer).
       tx.update(players)
         .set({
           totalGames: sql`${players.totalGames} + 1`,
           totalWins: sql`${players.totalWins} + ${won}`,
           totalSipsTaken: sql`${players.totalSipsTaken} + ${p.sipsTaken}`,
           totalSipsGiven: sql`${players.totalSipsGiven} + ${p.sipsGiven}`,
+          totalEquivalenceUnits: sql`${players.totalEquivalenceUnits} + ${p.equivalenceUnitsCompleted}`,
           name: p.name,
         })
         .where(eq(players.id, playerId))
@@ -69,9 +76,31 @@ export function persistFinishedGame(input: PersistFinishedGameInput): void {
           diceRolls: p.diceRolls,
           finishedPosition: p.position,
           won,
+          equivalencePreference: p.equivalencePreference || null,
+          equivalenceUnitsCompleted: p.equivalenceUnitsCompleted,
         })
         .onConflictDoNothing()
         .run();
     });
+
+    // Resolve sessionId → normalized pseudoId so /stats heatmaps are stable across reconnects
+    const sessionToPseudoId = new Map<string, string>();
+    state.players.forEach((p) => {
+      sessionToPseudoId.set(p.id, normalizePseudoId(p.name));
+    });
+
+    if (allSipEvents.length > 0) {
+      const rows = allSipEvents.map((e) => ({
+        gameId: roomId,
+        ts: e.ts,
+        fromId: e.fromId ? (sessionToPseudoId.get(e.fromId) ?? null) : null,
+        toId: sessionToPseudoId.get(e.toId) ?? e.toId,
+        count: e.count,
+        source: e.source,
+        equivalence: e.equivalence || null,
+      }));
+      // Drizzle insertMany via .values(arr)
+      tx.insert(sipEvents).values(rows).run();
+    }
   });
 }

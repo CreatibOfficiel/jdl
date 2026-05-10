@@ -16,6 +16,7 @@ export const players = sqliteTable('players', {
   totalWins: integer('total_wins').notNull().default(0),
   totalSipsTaken: integer('total_sips_taken').notNull().default(0),
   totalSipsGiven: integer('total_sips_given').notNull().default(0),
+  totalEquivalenceUnits: integer('total_equivalence_units').notNull().default(0),
   createdAt: integer('created_at').notNull(),
 });
 
@@ -31,12 +32,44 @@ export const gamePlayerStats = sqliteTable(
     diceRolls: integer('dice_rolls').notNull().default(0),
     finishedPosition: integer('finished_position'),
     won: integer('won').notNull().default(0),
+    equivalencePreference: text('equivalence_preference'),
+    equivalenceUnitsCompleted: integer('equivalence_units_completed').notNull().default(0),
   },
   (t) => ({
     pk: primaryKey({ columns: [t.gameId, t.playerId] }),
   }),
 );
 
+export const sipEvents = sqliteTable('sip_events', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  gameId: text('game_id').notNull(),
+  ts: integer('ts').notNull(),
+  fromId: text('from_id'),
+  toId: text('to_id').notNull(),
+  count: integer('count').notNull(),
+  source: text('source').notNull(),
+  equivalence: text('equivalence'),
+});
+
+export const seasons = sqliteTable('seasons', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  createdAt: integer('created_at').notNull(),
+});
+
+export const seasonGames = sqliteTable(
+  'season_games',
+  {
+    seasonId: text('season_id').notNull(),
+    gameId: text('game_id').notNull(),
+    addedAt: integer('added_at').notNull(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.seasonId, t.gameId] }),
+  }),
+);
+
 export type DbGame = typeof games.$inferSelect;
 export type DbPlayer = typeof players.$inferSelect;
 export type DbGamePlayerStats = typeof gamePlayerStats.$inferSelect;
+export type DbSipEvent = typeof sipEvents.$inferSelect;

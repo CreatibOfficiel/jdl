@@ -1,0 +1,901 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`generateBoard difficulty > medium boards are byte-stable across runs (snapshot) 1`] = `
+{
+  "cases": [
+    {
+      "index": 1,
+      "type": "neutral",
+    },
+    {
+      "index": 2,
+      "type": "witch",
+    },
+    {
+      "index": 3,
+      "numberValue": 4,
+      "type": "green_number",
+    },
+    {
+      "index": 4,
+      "portalPairId": 1,
+      "type": "portal",
+    },
+    {
+      "index": 5,
+      "type": "neutral",
+    },
+    {
+      "index": 6,
+      "type": "shop",
+    },
+    {
+      "index": 7,
+      "numberValue": 4,
+      "type": "red_number",
+    },
+    {
+      "index": 8,
+      "numberValue": 4,
+      "type": "green_number",
+    },
+    {
+      "index": 9,
+      "numberValue": 2,
+      "type": "green_number",
+    },
+    {
+      "index": 10,
+      "numberValue": 5,
+      "type": "red_number",
+    },
+    {
+      "index": 11,
+      "portalPairId": 0,
+      "type": "portal",
+    },
+    {
+      "index": 12,
+      "type": "neutral",
+    },
+    {
+      "index": 13,
+      "type": "neutral",
+    },
+    {
+      "index": 14,
+      "numberValue": 3,
+      "type": "red_number",
+    },
+    {
+      "index": 15,
+      "type": "clubs",
+    },
+    {
+      "index": 16,
+      "numberValue": 2,
+      "type": "green_number",
+    },
+    {
+      "index": 17,
+      "type": "witch",
+    },
+    {
+      "index": 18,
+      "numberValue": 1,
+      "type": "green_number",
+    },
+    {
+      "index": 19,
+      "type": "pills",
+    },
+    {
+      "index": 20,
+      "numberValue": 2,
+      "type": "red_number",
+    },
+    {
+      "index": 21,
+      "type": "rail_de_bus",
+    },
+    {
+      "index": 22,
+      "type": "spades",
+    },
+    {
+      "index": 23,
+      "type": "formule1",
+    },
+    {
+      "index": 24,
+      "numberValue": 4,
+      "type": "green_number",
+    },
+    {
+      "index": 25,
+      "type": "neutral",
+    },
+    {
+      "index": 26,
+      "type": "bromance",
+    },
+    {
+      "index": 27,
+      "numberValue": 5,
+      "type": "red_number",
+    },
+    {
+      "index": 28,
+      "type": "hearts",
+    },
+    {
+      "index": 29,
+      "numberValue": 3,
+      "type": "red_number",
+    },
+    {
+      "index": 30,
+      "numberValue": 3,
+      "type": "red_number",
+    },
+    {
+      "index": 31,
+      "type": "neutral",
+    },
+    {
+      "index": 32,
+      "type": "diamonds",
+    },
+    {
+      "index": 33,
+      "type": "prison",
+    },
+    {
+      "index": 34,
+      "numberValue": 5,
+      "type": "green_number",
+    },
+    {
+      "index": 35,
+      "type": "bromance",
+    },
+    {
+      "index": 36,
+      "numberValue": 3,
+      "type": "green_number",
+    },
+    {
+      "index": 37,
+      "numberValue": 2,
+      "type": "green_number",
+    },
+    {
+      "index": 38,
+      "portalPairId": 0,
+      "type": "portal",
+    },
+    {
+      "index": 39,
+      "numberValue": 2,
+      "type": "green_number",
+    },
+    {
+      "index": 40,
+      "numberValue": 5,
+      "type": "red_number",
+    },
+    {
+      "index": 41,
+      "type": "neutral",
+    },
+    {
+      "index": 42,
+      "type": "neutral",
+    },
+    {
+      "index": 43,
+      "type": "neutral",
+    },
+    {
+      "index": 44,
+      "type": "shop",
+    },
+    {
+      "index": 45,
+      "type": "neutral",
+    },
+    {
+      "index": 46,
+      "type": "usain",
+    },
+    {
+      "index": 47,
+      "numberValue": 2,
+      "type": "red_number",
+    },
+    {
+      "index": 48,
+      "numberValue": 3,
+      "type": "green_number",
+    },
+    {
+      "index": 49,
+      "numberValue": 2,
+      "type": "red_number",
+    },
+    {
+      "index": 50,
+      "portalPairId": 1,
+      "type": "portal",
+    },
+    {
+      "index": 51,
+      "type": "neutral",
+    },
+    {
+      "index": 52,
+      "type": "neutral",
+    },
+    {
+      "index": 53,
+      "type": "pills",
+    },
+    {
+      "index": 54,
+      "numberValue": 4,
+      "type": "green_number",
+    },
+    {
+      "index": 55,
+      "type": "hole",
+    },
+    {
+      "index": 56,
+      "numberValue": 4,
+      "type": "green_number",
+    },
+    {
+      "index": 57,
+      "numberValue": 4,
+      "type": "red_number",
+    },
+    {
+      "index": 58,
+      "type": "vacances",
+    },
+    {
+      "index": 59,
+      "numberValue": 1,
+      "type": "green_number",
+    },
+    {
+      "index": 60,
+      "numberValue": 3,
+      "type": "red_number",
+    },
+    {
+      "index": 61,
+      "numberValue": 4,
+      "type": "red_number",
+    },
+    {
+      "index": 62,
+      "numberValue": 5,
+      "type": "red_number",
+    },
+    {
+      "index": 63,
+      "type": "hole",
+    },
+  ],
+  "seed": "hello",
+  "thirstZone": {
+    "length": 6,
+    "start": 26,
+  },
+  "treasureCases": [
+    8,
+    34,
+  ],
+}
+`;
+
+exports[`generateBoard difficulty > medium boards are byte-stable across runs (snapshot) 2`] = `
+{
+  "cases": [
+    {
+      "index": 1,
+      "type": "clubs",
+    },
+    {
+      "index": 2,
+      "type": "bromance",
+    },
+    {
+      "index": 3,
+      "numberValue": 3,
+      "type": "green_number",
+    },
+    {
+      "index": 4,
+      "type": "witch",
+    },
+    {
+      "index": 5,
+      "type": "hearts",
+    },
+    {
+      "index": 6,
+      "numberValue": 5,
+      "type": "green_number",
+    },
+    {
+      "index": 7,
+      "type": "neutral",
+    },
+    {
+      "index": 8,
+      "numberValue": 1,
+      "type": "red_number",
+    },
+    {
+      "index": 9,
+      "type": "shop",
+    },
+    {
+      "index": 10,
+      "numberValue": 3,
+      "type": "green_number",
+    },
+    {
+      "index": 11,
+      "numberValue": 4,
+      "type": "green_number",
+    },
+    {
+      "index": 12,
+      "type": "diamonds",
+    },
+    {
+      "index": 13,
+      "numberValue": 2,
+      "type": "red_number",
+    },
+    {
+      "index": 14,
+      "type": "hole",
+    },
+    {
+      "index": 15,
+      "type": "neutral",
+    },
+    {
+      "index": 16,
+      "numberValue": 3,
+      "type": "red_number",
+    },
+    {
+      "index": 17,
+      "portalPairId": 1,
+      "type": "portal",
+    },
+    {
+      "index": 18,
+      "numberValue": 2,
+      "type": "red_number",
+    },
+    {
+      "index": 19,
+      "numberValue": 5,
+      "type": "green_number",
+    },
+    {
+      "index": 20,
+      "type": "formule1",
+    },
+    {
+      "index": 21,
+      "numberValue": 1,
+      "type": "green_number",
+    },
+    {
+      "index": 22,
+      "numberValue": 4,
+      "type": "red_number",
+    },
+    {
+      "index": 23,
+      "portalPairId": 0,
+      "type": "portal",
+    },
+    {
+      "index": 24,
+      "numberValue": 5,
+      "type": "red_number",
+    },
+    {
+      "index": 25,
+      "numberValue": 5,
+      "type": "red_number",
+    },
+    {
+      "index": 26,
+      "type": "prison",
+    },
+    {
+      "index": 27,
+      "numberValue": 5,
+      "type": "red_number",
+    },
+    {
+      "index": 28,
+      "type": "usain",
+    },
+    {
+      "index": 29,
+      "numberValue": 4,
+      "type": "red_number",
+    },
+    {
+      "index": 30,
+      "type": "neutral",
+    },
+    {
+      "index": 31,
+      "numberValue": 2,
+      "type": "green_number",
+    },
+    {
+      "index": 32,
+      "numberValue": 1,
+      "type": "red_number",
+    },
+    {
+      "index": 33,
+      "portalPairId": 1,
+      "type": "portal",
+    },
+    {
+      "index": 34,
+      "type": "spades",
+    },
+    {
+      "index": 35,
+      "type": "neutral",
+    },
+    {
+      "index": 36,
+      "numberValue": 4,
+      "type": "red_number",
+    },
+    {
+      "index": 37,
+      "type": "shop",
+    },
+    {
+      "index": 38,
+      "numberValue": 2,
+      "type": "red_number",
+    },
+    {
+      "index": 39,
+      "numberValue": 2,
+      "type": "green_number",
+    },
+    {
+      "index": 40,
+      "numberValue": 2,
+      "type": "green_number",
+    },
+    {
+      "index": 41,
+      "numberValue": 5,
+      "type": "green_number",
+    },
+    {
+      "index": 42,
+      "numberValue": 3,
+      "type": "green_number",
+    },
+    {
+      "index": 43,
+      "type": "bromance",
+    },
+    {
+      "index": 44,
+      "numberValue": 4,
+      "type": "red_number",
+    },
+    {
+      "index": 45,
+      "numberValue": 2,
+      "type": "red_number",
+    },
+    {
+      "index": 46,
+      "type": "neutral",
+    },
+    {
+      "index": 47,
+      "type": "pills",
+    },
+    {
+      "index": 48,
+      "type": "neutral",
+    },
+    {
+      "index": 49,
+      "type": "hole",
+    },
+    {
+      "index": 50,
+      "numberValue": 4,
+      "type": "green_number",
+    },
+    {
+      "index": 51,
+      "portalPairId": 0,
+      "type": "portal",
+    },
+    {
+      "index": 52,
+      "type": "neutral",
+    },
+    {
+      "index": 53,
+      "numberValue": 5,
+      "type": "green_number",
+    },
+    {
+      "index": 54,
+      "type": "witch",
+    },
+    {
+      "index": 55,
+      "numberValue": 3,
+      "type": "green_number",
+    },
+    {
+      "index": 56,
+      "type": "neutral",
+    },
+    {
+      "index": 57,
+      "type": "neutral",
+    },
+    {
+      "index": 58,
+      "type": "vacances",
+    },
+    {
+      "index": 59,
+      "type": "neutral",
+    },
+    {
+      "index": 60,
+      "type": "neutral",
+    },
+    {
+      "index": 61,
+      "type": "rail_de_bus",
+    },
+    {
+      "index": 62,
+      "type": "neutral",
+    },
+    {
+      "index": 63,
+      "type": "pills",
+    },
+  ],
+  "seed": "party",
+  "thirstZone": {
+    "length": 5,
+    "start": 25,
+  },
+  "treasureCases": [
+    8,
+    48,
+  ],
+}
+`;
+
+exports[`generateBoard difficulty > medium boards are byte-stable across runs (snapshot) 3`] = `
+{
+  "cases": [
+    {
+      "index": 1,
+      "type": "diamonds",
+    },
+    {
+      "index": 2,
+      "portalPairId": 0,
+      "type": "portal",
+    },
+    {
+      "index": 3,
+      "numberValue": 5,
+      "type": "green_number",
+    },
+    {
+      "index": 4,
+      "numberValue": 3,
+      "type": "green_number",
+    },
+    {
+      "index": 5,
+      "numberValue": 5,
+      "type": "red_number",
+    },
+    {
+      "index": 6,
+      "type": "neutral",
+    },
+    {
+      "index": 7,
+      "numberValue": 5,
+      "type": "red_number",
+    },
+    {
+      "index": 8,
+      "type": "witch",
+    },
+    {
+      "index": 9,
+      "type": "neutral",
+    },
+    {
+      "index": 10,
+      "type": "spades",
+    },
+    {
+      "index": 11,
+      "type": "neutral",
+    },
+    {
+      "index": 12,
+      "numberValue": 1,
+      "type": "green_number",
+    },
+    {
+      "index": 13,
+      "numberValue": 5,
+      "type": "green_number",
+    },
+    {
+      "index": 14,
+      "type": "bromance",
+    },
+    {
+      "index": 15,
+      "numberValue": 1,
+      "type": "red_number",
+    },
+    {
+      "index": 16,
+      "portalPairId": 1,
+      "type": "portal",
+    },
+    {
+      "index": 17,
+      "type": "neutral",
+    },
+    {
+      "index": 18,
+      "type": "shop",
+    },
+    {
+      "index": 19,
+      "type": "neutral",
+    },
+    {
+      "index": 20,
+      "numberValue": 1,
+      "type": "red_number",
+    },
+    {
+      "index": 21,
+      "numberValue": 5,
+      "type": "red_number",
+    },
+    {
+      "index": 22,
+      "numberValue": 2,
+      "type": "green_number",
+    },
+    {
+      "index": 23,
+      "numberValue": 3,
+      "type": "green_number",
+    },
+    {
+      "index": 24,
+      "numberValue": 2,
+      "type": "green_number",
+    },
+    {
+      "index": 25,
+      "numberValue": 2,
+      "type": "red_number",
+    },
+    {
+      "index": 26,
+      "type": "prison",
+    },
+    {
+      "index": 27,
+      "numberValue": 4,
+      "type": "red_number",
+    },
+    {
+      "index": 28,
+      "type": "bromance",
+    },
+    {
+      "index": 29,
+      "numberValue": 3,
+      "type": "red_number",
+    },
+    {
+      "index": 30,
+      "portalPairId": 0,
+      "type": "portal",
+    },
+    {
+      "index": 31,
+      "type": "neutral",
+    },
+    {
+      "index": 32,
+      "type": "shop",
+    },
+    {
+      "index": 33,
+      "type": "neutral",
+    },
+    {
+      "index": 34,
+      "type": "pills",
+    },
+    {
+      "index": 35,
+      "numberValue": 4,
+      "type": "green_number",
+    },
+    {
+      "index": 36,
+      "type": "hearts",
+    },
+    {
+      "index": 37,
+      "type": "formule1",
+    },
+    {
+      "index": 38,
+      "numberValue": 3,
+      "type": "red_number",
+    },
+    {
+      "index": 39,
+      "type": "hole",
+    },
+    {
+      "index": 40,
+      "type": "neutral",
+    },
+    {
+      "index": 41,
+      "type": "neutral",
+    },
+    {
+      "index": 42,
+      "numberValue": 5,
+      "type": "red_number",
+    },
+    {
+      "index": 43,
+      "type": "rail_de_bus",
+    },
+    {
+      "index": 44,
+      "numberValue": 5,
+      "type": "red_number",
+    },
+    {
+      "index": 45,
+      "portalPairId": 1,
+      "type": "portal",
+    },
+    {
+      "index": 46,
+      "numberValue": 5,
+      "type": "green_number",
+    },
+    {
+      "index": 47,
+      "type": "pills",
+    },
+    {
+      "index": 48,
+      "numberValue": 5,
+      "type": "green_number",
+    },
+    {
+      "index": 49,
+      "type": "neutral",
+    },
+    {
+      "index": 50,
+      "numberValue": 1,
+      "type": "red_number",
+    },
+    {
+      "index": 51,
+      "numberValue": 1,
+      "type": "green_number",
+    },
+    {
+      "index": 52,
+      "type": "hole",
+    },
+    {
+      "index": 53,
+      "type": "neutral",
+    },
+    {
+      "index": 54,
+      "numberValue": 1,
+      "type": "red_number",
+    },
+    {
+      "index": 55,
+      "numberValue": 2,
+      "type": "green_number",
+    },
+    {
+      "index": 56,
+      "type": "vacances",
+    },
+    {
+      "index": 57,
+      "type": "clubs",
+    },
+    {
+      "index": 58,
+      "numberValue": 2,
+      "type": "green_number",
+    },
+    {
+      "index": 59,
+      "type": "usain",
+    },
+    {
+      "index": 60,
+      "numberValue": 4,
+      "type": "green_number",
+    },
+    {
+      "index": 61,
+      "numberValue": 2,
+      "type": "red_number",
+    },
+    {
+      "index": 62,
+      "type": "neutral",
+    },
+    {
+      "index": 63,
+      "type": "witch",
+    },
+  ],
+  "seed": "THIB-4F2K",
+  "thirstZone": {
+    "length": 5,
+    "start": 25,
+  },
+  "treasureCases": [
+    4,
+    12,
+  ],
+}
+`;

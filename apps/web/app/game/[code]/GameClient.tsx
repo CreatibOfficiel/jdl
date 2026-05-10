@@ -3,7 +3,7 @@
 import { isValidGameCode, normalizeGameCode } from '@jeu-soiree/shared';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Board } from '@/components/board/Board';
 import { Dice3D } from '@/components/dice/Dice3D';
 import { ConnectionStatus } from '@/components/game/ConnectionStatus';
@@ -13,7 +13,10 @@ import { GameSkeleton } from '@/components/game/GameSkeleton';
 import { Inventory } from '@/components/game/Inventory';
 import { MuteToggle } from '@/components/game/MuteToggle';
 import { PlayersBar } from '@/components/game/PlayersBar';
+import { ReactionBar } from '@/components/game/ReactionBar';
+import { StatsPanel } from '@/components/game/StatsPanel';
 import { BromanceModal } from '@/components/modals/BromanceModal';
+import { EquivalenceTaskModal } from '@/components/modals/EquivalenceTaskModal';
 import { LoadedDieModal } from '@/components/modals/LoadedDieModal';
 import { PilulesModal } from '@/components/modals/PilulesModal';
 import { PlayerPickerModal } from '@/components/modals/PlayerPickerModal';
@@ -22,9 +25,14 @@ import { ShopModal } from '@/components/modals/ShopModal';
 import { TreasureModal } from '@/components/modals/TreasureModal';
 import { WitchOfferModal } from '@/components/modals/WitchOfferModal';
 import { WitchReceiveModal } from '@/components/modals/WitchReceiveModal';
+import { ModalEcho } from '@/components/master/ModalEcho';
+import { loadAppearance } from '@/components/AppearanceToggle';
 import { useColyseusRoom } from '@/hooks/useColyseusRoom';
+import { useEquivalenceQueue } from '@/hooks/useEquivalenceQueue';
+import { useModalEcho } from '@/hooks/useModalEcho';
+import { useSounds } from '@/hooks/useSounds';
 import { colyseusStateToBoard } from '@/lib/colyseusToBoard';
-import type { ClientGameState, ClientPlayer } from '@/types/colyseus';
+import type { ClientGameState, ClientPlayer, ClientSipEvent } from '@/types/colyseus';
 
 interface GameClientProps {
   code: string;
@@ -71,11 +79,26 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
   const [pickItemType, setPickItemType] = useState<string | null>(null);
   const [witchOfferOpen, setWitchOfferOpen] = useState(false);
   const [loadedDieOpen, setLoadedDieOpen] = useState(false);
+  const [statsOpen, setStatsOpen] = useState(false);
+  const sounds = useSounds();
+  const [echoesEnabled, setEchoesEnabled] = useState(false);
+  useEffect(() => {
+    setEchoesEnabled(loadAppearance().playerEchoes);
+  }, []);
 
   // Reset hasRolledOrder when phase moves on
   useEffect(() => {
     if (state?.phase !== 'rolling_order') setHasRolledOrder(false);
-  }, [state?.phase]);
+    if (state?.phase === 'finished') sounds.play('victory', 0.6);
+  }, [state?.phase, sounds]);
+
+  // Modal-open sound effect — fires on each new modal transition.
+  const lastModalRef = useRef('');
+  useEffect(() => {
+    const cur = state?.activeModal ?? '';
+    if (cur && cur !== lastModalRef.current) sounds.play('modal-open', 0.4);
+    lastModalRef.current = cur;
+  }, [state?.activeModal, sounds]);
 
   // Redirect back to lobby if phase reverts
   useEffect(() => {
@@ -131,6 +154,36 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
 
   const me = state.players.get(room.sessionId);
   const board = colyseusStateToBoard(state);
+
+  const sipEventsArr = useMemo(() => {
+    const arr: ClientSipEvent[] = [];
+    state.sipEvents.forEach((e) => arr.push(e));
+    return arr;
+  }, [state.sipEvents, state.sipEventsTotalCount]);
+
+  const eventLogArr = useMemo(() => {
+    const out: Array<{
+      id: string;
+      text: string;
+      importance: 'low' | 'normal' | 'high' | 'epic';
+      playerId: string;
+      kind: string;
+      timestamp: number;
+    }> = [];
+    state.eventLog.forEach((e) => {
+      out.push({
+        id: e.id,
+        text: e.text,
+        importance: e.importance as 'low' | 'normal' | 'high' | 'epic',
+        playerId: e.playerId,
+        kind: e.kind,
+        timestamp: e.timestamp,
+      });
+    });
+    return out;
+  }, [state.eventLog]);
+  const echo = useModalEcho(echoesEnabled ? eventLogArr : []);
+  const equivQueue = useEquivalenceQueue(sipEventsArr, room.sessionId, normalized);
   const turnOrderArray: string[] = [];
   state.turnOrder.forEach((id) => {
     turnOrderArray.push(id);
@@ -146,12 +199,14 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
 
   function handleRollOrder() {
     if (!room || hasRolledOrder) return;
+    sounds.play('dice-roll', 0.5);
     room.send('roll_order_dice');
     setHasRolledOrder(true);
   }
 
   function handleRollDice() {
     if (!room || !isMyTurn) return;
+    sounds.play('dice-roll', 0.5);
     room.send('roll_dice');
   }
 
@@ -160,12 +215,43 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
     router.push('/');
   }
 
+  function handleIamDone() {
+    if (!room) return;
+    if (!confirm('Te mettre en pause pour la fin de la partie ? Tu seras passé(e) à chaque tour.')) return;
+    room.send('i_am_done');
+  }
+  const meExited = me?.exited ?? false;
+
   return (
     <main className="mx-auto max-w-5xl px-4 py-4">
       <ConnectionStatus status={status} error={error} />
       <header className="mb-3 flex items-baseline justify-between gap-4">
         <h1 className="font-mono text-xl font-bold text-blue-600">{state.boardSeed}</h1>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setStatsOpen(true)}
+            className="rounded-lg border border-zinc-300 bg-white px-3 py-1 text-xs text-zinc-700 hover:bg-zinc-50"
+            aria-label="Ouvrir les stats"
+            title="Stats live"
+          >
+            📊
+          </button>
+          {!meExited && state.phase === 'playing' && (
+            <button
+              type="button"
+              onClick={handleIamDone}
+              className="rounded-lg border border-zinc-300 bg-white px-3 py-1 text-xs text-zinc-700 hover:bg-zinc-50"
+              title="Je passe pour la fin de la partie"
+            >
+              🪑 Je passe
+            </button>
+          )}
+          {meExited && (
+            <span className="rounded-lg bg-zinc-100 px-3 py-1 text-xs text-zinc-500" title="Tu es en pause">
+              🪑 En pause
+            </span>
+          )}
           <MuteToggle />
           <button
             type="button"
@@ -176,12 +262,21 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
           </button>
         </div>
       </header>
+      <StatsPanel state={state} open={statsOpen} onClose={() => setStatsOpen(false)} />
+      <EquivalenceTaskModal
+        task={equivQueue.current}
+        onDone={equivQueue.pop}
+        onSkip={equivQueue.pop}
+      />
+      {echoesEnabled && <ModalEcho echo={echo} />}
 
       <PlayersBar
         players={state.players}
         selfId={room.sessionId}
         activeId={activeId}
         turnOrder={turnOrderArray}
+        difficultyLevel={state.difficultyLevel}
+        sipEvents={sipEventsArr}
       />
 
       <div className="my-3 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
@@ -214,6 +309,7 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
               winnerName={state.players.get(state.winnerId)?.name ?? '?'}
               isMe={state.winnerId === room.sessionId}
               players={playersList}
+              state={state}
             />
           )}
 
@@ -245,6 +341,8 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
             </h2>
             <EventLog events={state.eventLog} />
           </section>
+
+          <ReactionBar room={room} />
         </aside>
       </div>
 

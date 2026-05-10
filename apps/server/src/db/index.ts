@@ -48,9 +48,48 @@ sqlite.exec(`
     won INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (game_id, player_id)
   );
+  CREATE TABLE IF NOT EXISTS sip_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    game_id TEXT NOT NULL,
+    ts INTEGER NOT NULL,
+    from_id TEXT,
+    to_id TEXT NOT NULL,
+    count INTEGER NOT NULL,
+    source TEXT NOT NULL,
+    equivalence TEXT
+  );
   CREATE INDEX IF NOT EXISTS idx_games_started_at ON games(started_at DESC);
   CREATE INDEX IF NOT EXISTS idx_gps_player ON game_player_stats(player_id);
+  CREATE INDEX IF NOT EXISTS idx_sip_events_game ON sip_events(game_id);
+
+  CREATE TABLE IF NOT EXISTS seasons (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    created_at INTEGER NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS season_games (
+    season_id TEXT NOT NULL,
+    game_id TEXT NOT NULL,
+    added_at INTEGER NOT NULL,
+    PRIMARY KEY (season_id, game_id)
+  );
+  CREATE INDEX IF NOT EXISTS idx_season_games_game ON season_games(game_id);
 `);
+
+// Idempotent column-level migrations. SQLite has no `ADD COLUMN IF NOT EXISTS`,
+// so we guard via pragma_table_info. Repeated boots do nothing on a fresh DB.
+function addColIfMissing(table: string, col: string, decl: string): void {
+  const cols = sqlite.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
+  if (cols.some((c) => c.name === col)) return;
+  sqlite.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${decl}`);
+}
+addColIfMissing('players', 'total_equivalence_units', 'INTEGER NOT NULL DEFAULT 0');
+addColIfMissing('game_player_stats', 'equivalence_preference', 'TEXT');
+addColIfMissing(
+  'game_player_stats',
+  'equivalence_units_completed',
+  'INTEGER NOT NULL DEFAULT 0',
+);
 
 export const db = drizzle(sqlite, { schema });
 export { schema };

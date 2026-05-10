@@ -1,13 +1,15 @@
 import { generateBoard } from '@jeu-soiree/game-logic';
+import { isDifficultyLevel } from '@jeu-soiree/shared';
 import Link from 'next/link';
 import { Board } from '@/components/board/Board';
 
 interface PreviewPageProps {
-  searchParams: Promise<{ seed?: string }>;
+  searchParams: Promise<{ seed?: string; difficulty?: string }>;
 }
 
 export default async function PreviewPage({ searchParams }: PreviewPageProps) {
-  const { seed } = await searchParams;
+  const { seed, difficulty: rawDifficulty } = await searchParams;
+  const difficulty = isDifficultyLevel(rawDifficulty) ? rawDifficulty : 'medium';
 
   if (!seed) {
     return (
@@ -32,7 +34,7 @@ export default async function PreviewPage({ searchParams }: PreviewPageProps) {
     );
   }
 
-  const board = generateBoard(seed);
+  const board = generateBoard(seed, difficulty);
   const counts = board.cases.reduce<Record<string, number>>((acc, c) => {
     acc[c.type] = (acc[c.type] ?? 0) + 1;
     return acc;
@@ -46,7 +48,24 @@ export default async function PreviewPage({ searchParams }: PreviewPageProps) {
           <h1 className="text-2xl font-bold">
             Plateau <span className="font-mono text-blue-600">{board.seed}</span>
           </h1>
-          <p className="text-sm text-zinc-600">63 cases · 3 anneaux · Phase 1 preview</p>
+          <p className="text-sm text-zinc-600">
+            63 cases · 3 anneaux · difficulté <strong>{difficulty}</strong>
+          </p>
+          <p className="mt-1 flex gap-3 text-sm">
+            {(['soft', 'medium', 'hardcore'] as const).map((d) => (
+              <Link
+                key={d}
+                href={`/preview?seed=${encodeURIComponent(seed)}&difficulty=${d}`}
+                className={
+                  d === difficulty
+                    ? 'rounded bg-blue-600 px-2 py-0.5 text-white'
+                    : 'rounded bg-zinc-200 px-2 py-0.5 text-zinc-700 hover:bg-zinc-300'
+                }
+              >
+                {d}
+              </Link>
+            ))}
+          </p>
         </div>
         <form action="/preview" className="flex gap-2">
           <input
@@ -56,6 +75,7 @@ export default async function PreviewPage({ searchParams }: PreviewPageProps) {
             className="rounded border border-zinc-300 px-3 py-1 font-mono text-sm"
             placeholder="seed"
           />
+          <input type="hidden" name="difficulty" value={difficulty} />
           <button
             type="submit"
             className="rounded bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700"
