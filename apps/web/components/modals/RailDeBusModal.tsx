@@ -43,7 +43,7 @@ export function RailDeBusModal({
           transition={{ duration: 0.2 }}
         >
           <motion.div
-            className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl"
+            className="w-full max-w-md rounded-2xl bg-white dark:bg-zinc-800 p-5 shadow-xl"
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -51,11 +51,11 @@ export function RailDeBusModal({
           >
             <header className="mb-3 text-center">
               <h2 className="text-2xl font-bold">🎴 Rail de bus</h2>
-              <p className="mt-1 text-sm text-zinc-600">
+              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                 Manche {round}/4 — {ROUND_LABEL[round] ?? '?'}
               </p>
               {!isMyTurn && (
-                <p className="mt-1 text-xs italic text-zinc-500">
+                <p className="mt-1 text-xs italic text-zinc-500 dark:text-zinc-400">
                   {activePlayerName} tente sa chance…
                 </p>
               )}
@@ -72,8 +72,8 @@ export function RailDeBusModal({
                     initial={{ rotateY: 90, opacity: 0 }}
                     animate={{ rotateY: 0, opacity: 1 }}
                     transition={{ duration: 0.4, delay: i * 0.05 }}
-                    className={`flex h-20 w-14 items-center justify-center rounded-lg border-2 border-zinc-300 bg-white text-xl font-bold shadow ${
-                      isRed ? 'text-red-600' : 'text-zinc-900'
+                    className={`flex h-20 w-14 items-center justify-center rounded-lg border-2 border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-xl font-bold shadow ${
+                      isRed ? 'text-red-600' : 'text-zinc-900 dark:text-zinc-100'
                     }`}
                   >
                     {c}
@@ -146,10 +146,10 @@ interface RailButtonProps {
 function RailButton({ onClick, disabled, variant = 'default', children }: RailButtonProps) {
   const classes =
     variant === 'red'
-      ? 'border-red-300 bg-red-50 text-red-700 hover:bg-red-100'
+      ? 'border-red-300 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-950/30'
       : variant === 'dark'
         ? 'border-zinc-700 bg-zinc-900 text-white hover:bg-zinc-800'
-        : 'border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50';
+        : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-50';
   return (
     <button
       type="button"

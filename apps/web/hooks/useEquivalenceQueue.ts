@@ -39,10 +39,25 @@ export function useEquivalenceQueue(
   sipEvents: ReadonlyArray<ClientSipEvent>,
   myId: string,
   roomId: string,
+  phase?: string,
 ): UseEquivalenceQueueResult {
   const [queue, setQueue] = useState<EquivalenceTask[]>(() => load(roomId));
   const seenRef = useRef<Set<string>>(new Set());
   const initRef = useRef(false);
+
+  useEffect(() => {
+    if (phase === 'finished' || phase === 'lobby') {
+      setQueue((prev) => {
+        if (prev.length === 0) return prev;
+        try {
+          sessionStorage.removeItem(`${STORAGE_PREFIX}${roomId}`);
+        } catch {
+          /* ignore */
+        }
+        return [];
+      });
+    }
+  }, [phase, roomId]);
 
   useEffect(() => {
     if (!myId) return;

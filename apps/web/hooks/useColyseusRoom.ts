@@ -3,6 +3,7 @@
 import type { Room } from 'colyseus.js';
 import { useEffect, useState } from 'react';
 import { getColyseusClient } from '@/lib/colyseus';
+import { loadProfile } from '@/lib/profile';
 
 export type RoomStatus = 'idle' | 'connecting' | 'joined' | 'reconnecting' | 'error';
 
@@ -19,20 +20,20 @@ interface PersistedSession {
   code: string;
 }
 
-const STORAGE_PREFIX = 'jeu-soiree-session:';
+const SESSION_PREFIX = 'jeu-soiree-session:';
 
 function persistSession(code: string, roomName: string, reconnectionToken: string) {
   if (typeof window === 'undefined') return;
   const data: PersistedSession = { roomName, reconnectionToken, code };
   try {
-    window.sessionStorage.setItem(`${STORAGE_PREFIX}${code}`, JSON.stringify(data));
+    window.sessionStorage.setItem(`${SESSION_PREFIX}${code}`, JSON.stringify(data));
   } catch {}
 }
 
 function loadSession(code: string): PersistedSession | null {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = window.sessionStorage.getItem(`${STORAGE_PREFIX}${code}`);
+    const raw = window.sessionStorage.getItem(`${SESSION_PREFIX}${code}`);
     return raw ? (JSON.parse(raw) as PersistedSession) : null;
   } catch {
     return null;
@@ -42,7 +43,7 @@ function loadSession(code: string): PersistedSession | null {
 function clearSession(code: string) {
   if (typeof window === 'undefined') return;
   try {
-    window.sessionStorage.removeItem(`${STORAGE_PREFIX}${code}`);
+    window.sessionStorage.removeItem(`${SESSION_PREFIX}${code}`);
   } catch {}
 }
 
@@ -65,6 +66,7 @@ export function useColyseusRoom<T = unknown>(
 
     let cancelled = false;
     let joinedRoom: Room<T> | null = null;
+    const timers: ReturnType<typeof setTimeout>[] = [];
 
     setStatus('connecting');
     setError(null);
@@ -82,7 +84,97 @@ export function useColyseusRoom<T = unknown>(
           clearSession(code);
         }
       }
+
+      const profile = loadProfile();
+      if (profile) {
+        if (profile.emoji) parsedOptions.emoji = profile.emoji;
+        if (profile.color) parsedOptions.color = profile.color;
+        if (profile.suit) parsedOptions.suit = profile.suit;
+        if (profile.equivalencePreference)
+          parsedOptions.equivalencePreference = profile.equivalencePreference;
+      }
+
       return await client.joinOrCreate<T>(roomName, parsedOptions);
+    }
+
+    function scheduleReconnect() {
+      const session = loadSession(code);
+      let attempts = 0;
+      const maxAttempts = 5;
+
+      function attempt() {
+        if (cancelled) return;
+        if (!session || session.roomName !== roomName) {
+          setStatus('error');
+          setError('Session perdue, reconnexion impossible');
+          return;
+        }
+
+        (async () => {
+          try {
+            const r = await client.reconnect<T>(session.reconnectionToken);
+            if (cancelled) {
+              r.leave();
+              return;
+            }
+            joinedRoom = r;
+            attachListeners(r);
+          } catch {
+            attempts++;
+            if (attempts >= maxAttempts) {
+              if (!cancelled) {
+                clearSession(code);
+                setStatus('error');
+                setError('Reconnexion échouée après plusieurs tentatives');
+              }
+              return;
+            }
+            const delay = attempts === 1 ? 2000 : 3000;
+            timers.push(setTimeout(attempt, delay));
+          }
+        })();
+      }
+
+      timers.push(setTimeout(attempt, 2000));
+    }
+
+    function restoreProfile(r: Room<T>) {
+      const profile = loadProfile();
+      if (!profile) return;
+      if (!profile.emoji && !profile.color && !profile.suit) return;
+
+      const s = r.state as Record<string, unknown>;
+      const players = s?.players as Record<string, unknown> | undefined;
+      if (!players || typeof players.forEach !== 'function') return;
+
+      let me: Record<string, unknown> | null = null;
+      let colorTaken = false;
+      let emojiTaken = false;
+      (players as unknown as Map<string, Record<string, unknown>>).forEach((p, id) => {
+        if (id === r.sessionId) {
+          me = p;
+          return;
+        }
+        const connected = p['connected'] !== false;
+        if (!connected) return;
+        if (profile.color && p['color'] === profile.color) colorTaken = true;
+        if (profile.emoji && p['emoji'] === profile.emoji) emojiTaken = true;
+      });
+
+      const meEmoji = me ? String(me['emoji'] ?? '') : '';
+      const meColor = me ? String(me['color'] ?? '') : '';
+      const meSuit = me ? String(me['suit'] ?? '') : '';
+
+      const payload: Record<string, string> = {};
+      if (!meEmoji && profile.emoji && !emojiTaken) payload.emoji = profile.emoji;
+      if (!meColor && profile.color && !colorTaken) payload.color = profile.color;
+      if (!meSuit && profile.suit) payload.suit = profile.suit;
+      if (profile.equivalencePreference)
+        payload.equivalencePreference = profile.equivalencePreference;
+
+      if (Object.keys(payload).length > 0) {
+        r.send('update_profile', payload);
+      }
     }
 
     function attachListeners(r: Room<T>) {
@@ -91,20 +183,20 @@ export function useColyseusRoom<T = unknown>(
       setStatus('joined');
 
       persistSession(code, roomName, r.reconnectionToken);
+      restoreProfile(r);
 
       r.onStateChange(() => setTick((t) => t + 1));
       r.onError((c, message) => setError(`[${c}] ${message ?? 'unknown error'}`));
       r.onLeave((leaveCode) => {
         if (cancelled) return;
-        // 1000-1999 = clean closure, 4000 = consented leave
+        setRoom(null);
         if (leaveCode === 4000 || (leaveCode >= 1000 && leaveCode < 2000)) {
           clearSession(code);
-          setRoom(null);
           setStatus('idle');
           return;
         }
         setStatus('reconnecting');
-        // Colyseus.js will automatically attempt reconnect via the token; if it fails, status stays at reconnecting
+        scheduleReconnect();
       });
     }
 
@@ -126,7 +218,12 @@ export function useColyseusRoom<T = unknown>(
 
     return () => {
       cancelled = true;
-      joinedRoom?.leave();
+      for (const t of timers) clearTimeout(t);
+      if (joinedRoom) {
+        try {
+          joinedRoom.leave();
+        } catch {}
+      }
     };
   }, [enabled, roomName, optsKey, code]);
 

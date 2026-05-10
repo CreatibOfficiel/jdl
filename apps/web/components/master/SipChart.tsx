@@ -79,7 +79,9 @@ export function SipChart({
         {series.map((s) => {
           if (s.points.length === 0) return null;
           const stroke = colorByPlayerId.get(s.playerId) ?? '#888';
-          const points = s.points.map(([t, v]) => `${sx(t).toFixed(1)},${sy(v).toFixed(1)}`).join(' ');
+          const points = s.points
+            .map(([t, v]) => `${sx(t).toFixed(1)},${sy(v).toFixed(1)}`)
+            .join(' ');
           return (
             <polyline
               key={s.playerId}

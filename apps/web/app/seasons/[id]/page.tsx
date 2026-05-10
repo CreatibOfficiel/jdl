@@ -49,25 +49,28 @@ export default async function SeasonPage({ params }: SeasonPageProps) {
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
       <header className="mb-6">
-        <Link href="/seasons" className="text-sm text-blue-600 underline">
+        <Link href="/seasons" className="text-sm text-blue-600 dark:text-blue-400 underline">
           ← Toutes les saisons
         </Link>
         <h1 className="mt-2 text-3xl font-bold">{season.name}</h1>
-        <p className="mt-1 text-sm text-zinc-600">
+        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
           {gameIds.length} parties · {standings.length} joueurs
         </p>
       </header>
 
-      <section className="rounded-2xl border border-zinc-200 bg-white p-4">
-        <h2 className="font-semibold text-zinc-700">Classement</h2>
+      <section className="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
+        <h2 className="font-semibold text-zinc-700 dark:text-zinc-300">Classement</h2>
         {standings.length === 0 ? (
-          <p className="mt-3 text-sm italic text-zinc-500">
+          <p className="mt-3 text-sm italic text-zinc-500 dark:text-zinc-400">
             Aucune partie encore associée à cette saison. Ajoute-en avec{' '}
-            <code className="rounded bg-zinc-100 px-1">POST /api/seasons/{id}/games</code>.
+            <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-700">
+              POST /api/seasons/{id}/games
+            </code>
+            .
           </p>
         ) : (
           <table className="mt-3 w-full text-sm">
-            <thead className="text-left text-xs uppercase tracking-wide text-zinc-500">
+            <thead className="text-left text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
               <tr>
                 <th className="py-1">#</th>
                 <th className="py-1">Joueur</th>
@@ -80,18 +83,18 @@ export default async function SeasonPage({ params }: SeasonPageProps) {
             </thead>
             <tbody>
               {standings.map((s, i) => (
-                <tr key={s.playerId} className="border-t border-zinc-100">
+                <tr key={s.playerId} className="border-t border-zinc-100 dark:border-zinc-800">
                   <td className="py-2 font-bold text-zinc-400">{i + 1}.</td>
                   <td className="py-2">
                     <Link
                       href={`/profile/${encodeURIComponent(s.playerId)}`}
-                      className="text-zinc-900 hover:underline"
+                      className="text-zinc-900 hover:underline dark:text-zinc-100"
                     >
                       {s.name}
                     </Link>
                   </td>
                   <td className="py-2 font-mono">{s.games}</td>
-                  <td className="py-2 font-mono text-amber-700">{s.wins}</td>
+                  <td className="py-2 font-mono text-amber-700 dark:text-amber-400">{s.wins}</td>
                   <td className="py-2 font-mono">{s.sipsTaken}</td>
                   <td className="py-2 font-mono">{s.sipsGiven}</td>
                   <td className="py-2 font-mono">{s.equivalenceUnits}</td>
@@ -104,13 +107,13 @@ export default async function SeasonPage({ params }: SeasonPageProps) {
 
       {gameIds.length > 0 && (
         <section className="mt-6">
-          <h2 className="font-semibold text-zinc-700">Parties incluses</h2>
+          <h2 className="font-semibold text-zinc-700 dark:text-zinc-300">Parties incluses</h2>
           <ul className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
             {gameIds.map((gid) => (
               <li key={gid}>
                 <Link
                   href={`/stats/${encodeURIComponent(gid)}`}
-                  className="block truncate rounded-lg border border-zinc-200 bg-white px-2 py-1 text-xs font-mono text-blue-600 hover:bg-zinc-50"
+                  className="block truncate rounded-lg border border-zinc-200 bg-white px-2 py-1 text-xs font-mono text-blue-600 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-blue-400 dark:hover:bg-zinc-700"
                   title={gid}
                 >
                   {gid}

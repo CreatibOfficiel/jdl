@@ -30,7 +30,7 @@ export function TreasureModal({
           transition={{ duration: 0.2 }}
         >
           <motion.div
-            className="w-full max-w-md rounded-2xl bg-gradient-to-b from-amber-50 to-orange-50 p-5 text-center shadow-xl"
+            className="w-full max-w-md rounded-2xl bg-gradient-to-b from-amber-50 to-orange-50 dark:from-amber-950/50 dark:to-orange-950/50 p-5 text-center shadow-xl"
             initial={{ opacity: 0, y: 20, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -43,13 +43,15 @@ export function TreasureModal({
             >
               💰
             </motion.div>
-            <h2 className="mt-2 text-2xl font-bold text-amber-900">Trésor !</h2>
+            <h2 className="mt-2 text-2xl font-bold text-amber-900 dark:text-amber-200">Trésor !</h2>
             {isMyTurn ? (
-              <p className="mt-1 text-sm text-zinc-700">
+              <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300">
                 Tu peux l'ouvrir avec ton pied de biche (consommé) — dé d'effet derrière.
               </p>
             ) : (
-              <p className="mt-1 text-sm text-zinc-700">{activePlayerName} a trouvé un trésor…</p>
+              <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300">
+                {activePlayerName} a trouvé un trésor…
+              </p>
             )}
 
             <div className="mt-4 flex gap-2">
@@ -65,7 +67,7 @@ export function TreasureModal({
                 type="button"
                 disabled={!isMyTurn}
                 onClick={onSkip}
-                className="flex-1 rounded-xl border border-zinc-300 bg-white px-4 py-3 font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex-1 rounded-xl border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 dark:border-zinc-600 dark:bg-zinc-800 px-4 py-3 font-medium text-zinc-700 dark:text-zinc-300 dark:text-zinc-300 transition hover:bg-zinc-50 dark:hover:bg-zinc-700 dark:bg-zinc-900 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Passer
               </button>

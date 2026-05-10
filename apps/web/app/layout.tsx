@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { ThemeProvider } from 'next-themes';
 import type { ReactNode } from 'react';
 import './globals.css';
 
@@ -35,13 +36,22 @@ export const viewport: Viewport = {
   themeColor: '#1a1a1a',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 5,
+  maximumScale: 1,
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="fr">
-      <body className="bg-zinc-50 text-zinc-900 antialiased">{children}</body>
+    <html lang="fr" suppressHydrationWarning>
+      <body className="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 antialiased">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

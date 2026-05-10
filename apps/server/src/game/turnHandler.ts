@@ -24,6 +24,7 @@ function rollPlayerDie(player: Player): number {
 
 export function handleRollDice(room: GameRoom, client: Client): void {
   if (room.state.phase !== 'playing') return;
+  if (room.state.activeModal) return;
 
   const expectedId = room.state.turnOrder[room.state.currentTurnIndex];
   if (expectedId !== client.sessionId) return;
@@ -153,7 +154,9 @@ function advanceTurn(room: GameRoom): void {
   room.totalTurnCount += 1;
 
   // Hydration prompt every N global turns. Per-difficulty cadence; never per-player.
-  const level = isDifficultyLevel(room.state.difficultyLevel) ? room.state.difficultyLevel : 'medium';
+  const level = isDifficultyLevel(room.state.difficultyLevel)
+    ? room.state.difficultyLevel
+    : 'medium';
   const cadence = SAFETY_BY_DIFFICULTY[level].hydrationEveryNTurns;
   if (cadence > 0 && room.totalTurnCount % cadence === 0) {
     pushEvent(room.state, {

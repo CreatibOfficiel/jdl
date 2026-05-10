@@ -47,9 +47,10 @@ interface CaseProps {
   data: BoardCase;
   isTreasure: boolean;
   isInThirstZone: boolean;
+  highlight?: 'red' | 'blue' | 'green' | 'gold' | null;
 }
 
-export function Case({ geometry, data, isTreasure, isInThirstZone }: CaseProps) {
+export function Case({ geometry, data, isTreasure, isInThirstZone, highlight }: CaseProps) {
   const colors = CASE_COLORS[data.type];
   const icon = CASE_ICONS[data.type];
   const showsNumber = data.type === 'red_number' || data.type === 'green_number';
@@ -60,7 +61,26 @@ export function Case({ geometry, data, isTreasure, isInThirstZone }: CaseProps) 
 
   return (
     <g>
-      <path d={geometry.path} fill={colors.bg} stroke={colors.stroke} strokeWidth={1} />
+      {highlight && (
+        <circle
+          cx={geometry.centerX}
+          cy={geometry.centerY}
+          r={28}
+          fill="none"
+          stroke={
+            highlight === 'red'
+              ? '#ef4444'
+              : highlight === 'blue'
+                ? '#3b82f6'
+                : highlight === 'green'
+                  ? '#22c55e'
+                  : '#eab308'
+          }
+          strokeWidth={2.5}
+          className="animate-case-glow"
+        />
+      )}
+      <path d={geometry.path} fill={colors.bg} stroke={colors.stroke} strokeWidth={1.5} />
       {isInThirstZone && (
         <path
           d={geometry.path}
@@ -75,19 +95,19 @@ export function Case({ geometry, data, isTreasure, isInThirstZone }: CaseProps) 
         <circle
           cx={geometry.centerX}
           cy={geometry.centerY}
-          r={5}
+          r={7}
           fill="#FFD60A"
           stroke="#1A1A1A"
-          strokeWidth={1}
+          strokeWidth={1.5}
         />
       )}
       {showsNumber && data.numberValue !== undefined && (
         <text
           x={geometry.centerX}
-          y={geometry.centerY + 4}
+          y={geometry.centerY + 6}
           textAnchor="middle"
           fill={colors.fg}
-          fontSize={12}
+          fontSize={18}
           fontWeight={700}
         >
           {data.numberValue}
@@ -96,10 +116,10 @@ export function Case({ geometry, data, isTreasure, isInThirstZone }: CaseProps) 
       {icon && !portalLabel && (
         <text
           x={geometry.centerX}
-          y={geometry.centerY + 4}
+          y={geometry.centerY + 6}
           textAnchor="middle"
           fill={colors.fg}
-          fontSize={11}
+          fontSize={16}
         >
           {icon}
         </text>
@@ -107,10 +127,10 @@ export function Case({ geometry, data, isTreasure, isInThirstZone }: CaseProps) 
       {portalLabel && (
         <text
           x={geometry.centerX}
-          y={geometry.centerY + 4}
+          y={geometry.centerY + 6}
           textAnchor="middle"
           fill={colors.fg}
-          fontSize={11}
+          fontSize={16}
           fontWeight={700}
         >
           🌀{portalLabel}
@@ -118,10 +138,10 @@ export function Case({ geometry, data, isTreasure, isInThirstZone }: CaseProps) 
       )}
       <text
         x={geometry.centerX}
-        y={geometry.centerY - 6}
+        y={geometry.centerY - 10}
         textAnchor="middle"
         fill={colors.fg}
-        fontSize={7}
+        fontSize={10}
         opacity={0.7}
       >
         {data.index}

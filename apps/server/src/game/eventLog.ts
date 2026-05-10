@@ -2,6 +2,8 @@ import { GameEvent } from '../schemas/GameEvent';
 import type { GameState } from '../schemas/GameState';
 
 const MAX_EVENTS = 50;
+// Shared counter is intentional: event IDs only need to be unique within a single process.
+// The Date.now() suffix already guarantees global uniqueness across rooms.
 let nextEventId = 0;
 
 export type EventImportance = 'low' | 'normal' | 'high' | 'epic';

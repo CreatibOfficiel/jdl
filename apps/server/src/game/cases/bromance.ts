@@ -1,6 +1,7 @@
 import type { Client } from 'colyseus';
 import type { GameRoom } from '../../rooms/GameRoom';
 import { pushEvent } from '../eventLog';
+import { endTurn } from '../turnHandler';
 
 interface BromanceMessage {
   targetPlayerId: string;
@@ -41,4 +42,6 @@ export function handleChooseBromance(
     text: `💪 ${player.name} et ${target.name} sont maintenant BROMANCE !`,
     importance: 'high',
   });
+
+  endTurn(room);
 }

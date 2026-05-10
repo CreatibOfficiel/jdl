@@ -1,13 +1,11 @@
-import type { EquivalenceKind, Suit } from '@jeu-soiree/shared';
-
 const STORAGE_KEY = 'jeu-soiree-profile';
 
 export interface PlayerProfile {
   name: string;
-  suit: Suit;
-  color: string;
-  emoji: string;
-  equivalencePreference: EquivalenceKind;
+  emoji?: string;
+  color?: string;
+  suit?: string;
+  equivalencePreference?: string;
 }
 
 export function loadProfile(): Partial<PlayerProfile> | null {
@@ -20,11 +18,10 @@ export function loadProfile(): Partial<PlayerProfile> | null {
   }
 }
 
-export function saveProfile(profile: PlayerProfile): void {
+export function saveProfile(profile: Partial<PlayerProfile>): void {
   if (typeof window === 'undefined') return;
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
-  } catch {
-    // localStorage may be disabled (private browsing, quota, etc.) — silently ignore
-  }
+    const existing = loadProfile() ?? {};
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...existing, ...profile }));
+  } catch {}
 }

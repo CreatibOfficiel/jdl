@@ -23,7 +23,12 @@ import { useReactions } from '@/hooks/useReactions';
 import { useSounds } from '@/hooks/useSounds';
 import { colyseusStateToBoard } from '@/lib/colyseusToBoard';
 import { cumulativeSeries } from '@/lib/sipStats';
-import type { ClientGameEvent, ClientGameState, ClientPlayer, ClientSipEvent } from '@/types/colyseus';
+import type {
+  ClientGameEvent,
+  ClientGameState,
+  ClientPlayer,
+  ClientSipEvent,
+} from '@/types/colyseus';
 
 const COLOR_BY_ID = new Map(PAWN_COLORS.map((c) => [c.id, c.hex]));
 
@@ -35,10 +40,7 @@ export function MasterClient({ code }: MasterClientProps) {
   const normalized = normalizeGameCode(code);
   const validCode = isValidGameCode(normalized);
 
-  const options = useMemo(
-    () => ({ code: normalized, spectator: true }),
-    [normalized],
-  );
+  const options = useMemo(() => ({ code: normalized, spectator: true }), [normalized]);
 
   const { state, status, error, room } = useColyseusRoom<ClientGameState>(
     'game_room',
@@ -158,7 +160,11 @@ export function MasterClient({ code }: MasterClientProps) {
     return arr;
   }, [state.sipEvents, state.sipEventsTotalCount]);
   const series = useMemo(
-    () => cumulativeSeries(sipEvents, players.map((p) => p.id)),
+    () =>
+      cumulativeSeries(
+        sipEvents,
+        players.map((p) => p.id),
+      ),
     [sipEvents, players],
   );
   const colorByPlayerId = useMemo(() => {
@@ -216,7 +222,7 @@ export function MasterClient({ code }: MasterClientProps) {
             nameByPlayerId={nameByPlayerId}
           />
           {origin && (
-            <section className="rounded-3xl bg-white p-3">
+            <section className="rounded-3xl bg-white dark:bg-zinc-800 p-3">
               <p className="mb-1 text-center text-xs uppercase tracking-wider text-zinc-500">
                 Rejoindre la partie
               </p>
@@ -265,7 +271,9 @@ function PlayerRoster({
         {players.map((p) => {
           const hex = COLOR_BY_ID.get(p.color) ?? '#888';
           const isActive = p.id === currentPlayerId;
-          const pref = isEquivalenceKind(p.equivalencePreference) ? p.equivalencePreference : 'drinks';
+          const pref = isEquivalenceKind(p.equivalencePreference)
+            ? p.equivalencePreference
+            : 'drinks';
           const equivRule = EQUIVALENCE_TABLE[pref as EquivalenceKind];
           return (
             <li

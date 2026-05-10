@@ -4,9 +4,6 @@ interface GamePageProps {
   params: Promise<{ code: string }>;
   searchParams: Promise<{
     name?: string;
-    suit?: string;
-    color?: string;
-    emoji?: string;
   }>;
 }
 

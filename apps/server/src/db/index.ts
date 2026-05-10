@@ -85,11 +85,7 @@ function addColIfMissing(table: string, col: string, decl: string): void {
 }
 addColIfMissing('players', 'total_equivalence_units', 'INTEGER NOT NULL DEFAULT 0');
 addColIfMissing('game_player_stats', 'equivalence_preference', 'TEXT');
-addColIfMissing(
-  'game_player_stats',
-  'equivalence_units_completed',
-  'INTEGER NOT NULL DEFAULT 0',
-);
+addColIfMissing('game_player_stats', 'equivalence_units_completed', 'INTEGER NOT NULL DEFAULT 0');
 
 export const db = drizzle(sqlite, { schema });
 export { schema };

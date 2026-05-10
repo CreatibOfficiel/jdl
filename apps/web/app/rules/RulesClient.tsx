@@ -12,15 +12,11 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 interface CaseInfo {
-  /** Stable id for keys + URL anchors. */
   id: string;
   emoji: string;
   name: string;
-  /** Visual category — used to chunk the grid. */
   category: 'drink' | 'move' | 'social' | 'penalty' | 'reward' | 'neutral';
-  /** Short pitch (1 line). */
   short: string;
-  /** Full effect — supports {{sips:N}} which renders as the chosen difficulty/equivalence label. */
   effect: string;
 }
 
@@ -32,7 +28,7 @@ const CASES: CaseInfo[] = [
     category: 'drink',
     short: 'Distribue N gorgées… ou bois-les en zone soif',
     effect:
-      'Tu distribues N gorgées au joueur de ton choix. **Si la case est dans la zone soif, c\'est toi qui bois N gorgées.**',
+      "Tu distribues N gorgées au joueur de ton choix. **Si la case est dans la zone soif, c'est toi qui bois N gorgées.**",
   },
   {
     id: 'green_number',
@@ -101,16 +97,16 @@ const CASES: CaseInfo[] = [
     emoji: '🔒',
     name: 'Prison',
     category: 'penalty',
-    short: 'Bloqué jusqu\'à un 6 (max 4 tours)',
+    short: "Bloqué jusqu'à un 6 (max 4 tours)",
     effect:
-      "Lance le dé chaque tour : 6 → libéré. Sinon → **bois 1 gorgée et reste**. Au 4ᵉ tour tu sors automatiquement. Une **clé de prison** te libère immédiatement.",
+      'Lance le dé chaque tour : 6 → libéré. Sinon → **bois 1 gorgée et reste**. Au 4ᵉ tour tu sors automatiquement. Une **clé de prison** te libère immédiatement.',
   },
   {
     id: 'hole',
     emoji: '🕳️',
     name: 'Trou',
     category: 'penalty',
-    short: 'Avance d\'1 case par tour pendant N tours',
+    short: "Avance d'1 case par tour pendant N tours",
     effect:
       "Lance le dé : le résultat N est ton nombre de tours bloqués. Pendant ces tours, tu n'avances que d'**1 case par tour** (l'effet de chaque case s'applique).",
   },
@@ -129,7 +125,7 @@ const CASES: CaseInfo[] = [
     category: 'reward',
     short: 'Achat optionnel : clé, pied de biche, Pt malus',
     effect:
-      "Tu peux acheter (en gorgées que **tu bois**) : 🗝️ Clé prison (5G), 🪤 Pied de biche (8G), 💣 Pt malus ×{{ptMalus}} (6G). Ou skip.",
+      'Tu peux acheter (en gorgées que **tu bois**) : 🗝️ Clé prison (5G), 🪤 Pied de biche (8G), 💣 Pt malus ×{{ptMalus}} (6G). Ou skip.',
   },
   {
     id: 'witch',
@@ -138,7 +134,7 @@ const CASES: CaseInfo[] = [
     category: 'social',
     short: 'Tu reçois une potion à offrir plus tard',
     effect:
-      "Tu gagnes une **potion** dans ton inventaire. Quand tu l'utilises sur quelqu'un, il a 10s pour dire \"merci\" : **merci → sauvé**, **silence → il boit le double**.",
+      'Tu gagnes une **potion** dans ton inventaire. Quand tu l\'utilises sur quelqu\'un, il a 10s pour dire "merci" : **merci → sauvé**, **silence → il boit le double**.',
   },
   {
     id: 'bromance',
@@ -156,7 +152,7 @@ const CASES: CaseInfo[] = [
     category: 'social',
     short: 'Choisis : rouge ou bleue ?',
     effect:
-      "**Rouge** : tu bois 6 gorgées direct. **Bleue** : lance un dé. 1-2 → bois 8 · 3-4 → distribue 10 · 5-6 → tes prochaines gorgées comptent ×2.",
+      '**Rouge** : tu bois 6 gorgées direct. **Bleue** : lance un dé. 1-2 → bois 8 · 3-4 → distribue 10 · 5-6 → tes prochaines gorgées comptent ×2.',
   },
   {
     id: 'rail_de_bus',
@@ -191,17 +187,41 @@ const CASES: CaseInfo[] = [
     name: 'Case neutre',
     category: 'neutral',
     short: 'Rien à faire',
-    effect: "Aucun effet. Tu passes ton tour à qui suit.",
+    effect: 'Aucun effet. Tu passes ton tour à qui suit.',
   },
 ];
 
 const CATEGORY_META: Record<CaseInfo['category'], { label: string; bg: string; ring: string }> = {
-  drink: { label: '🍻 Boisson', bg: 'bg-rose-50', ring: 'ring-rose-200' },
-  move: { label: '🏃 Mouvement', bg: 'bg-blue-50', ring: 'ring-blue-200' },
-  social: { label: '🤝 Social', bg: 'bg-purple-50', ring: 'ring-purple-200' },
-  penalty: { label: '⚠️ Pénalité', bg: 'bg-amber-50', ring: 'ring-amber-200' },
-  reward: { label: '🎁 Récompense', bg: 'bg-emerald-50', ring: 'ring-emerald-200' },
-  neutral: { label: '· Neutre', bg: 'bg-zinc-50', ring: 'ring-zinc-200' },
+  drink: {
+    label: '🍻 Boisson',
+    bg: 'bg-rose-50 dark:bg-rose-950/30',
+    ring: 'ring-rose-200 dark:ring-rose-800/30',
+  },
+  move: {
+    label: '🏃 Mouvement',
+    bg: 'bg-blue-50 dark:bg-blue-950/30',
+    ring: 'ring-blue-200 dark:ring-blue-800/30',
+  },
+  social: {
+    label: '🤝 Social',
+    bg: 'bg-purple-50 dark:bg-purple-950/30',
+    ring: 'ring-purple-200 dark:ring-purple-800/30',
+  },
+  penalty: {
+    label: '⚠️ Pénalité',
+    bg: 'bg-amber-50 dark:bg-amber-950/30',
+    ring: 'ring-amber-200 dark:ring-amber-800/30',
+  },
+  reward: {
+    label: '🎁 Récompense',
+    bg: 'bg-emerald-50 dark:bg-emerald-950/30',
+    ring: 'ring-emerald-200 dark:ring-emerald-800/30',
+  },
+  neutral: {
+    label: '· Neutre',
+    bg: 'bg-zinc-50 dark:bg-zinc-800/50',
+    ring: 'ring-zinc-200 dark:ring-zinc-700',
+  },
 };
 
 export function RulesClient() {
@@ -223,11 +243,10 @@ export function RulesClient() {
   const cfg = DIFFICULTY_PRESETS[difficulty].config;
   const equivRule = EQUIVALENCE_TABLE[equivalence];
 
-  /** Replace tokens like {{sipsPerCard}} or {{ptMalus}} with the right number, formatted
-   *  as either "N gorgée(s)" or the equivalence ("10 pompes / gorgée") */
   const renderSips = (sips: number): string => {
     if (equivalence === 'drinks') return `${sips} gorgée${sips > 1 ? 's' : ''}`;
-    if (equivalence === 'sit_out') return `tour passé (au lieu de ${sips} gorgée${sips > 1 ? 's' : ''})`;
+    if (equivalence === 'sit_out')
+      return `tour passé (au lieu de ${sips} gorgée${sips > 1 ? 's' : ''})`;
     const units = sips * equivRule.perSip;
     return `${units} ${equivRule.unit} (${sips} gorgée${sips > 1 ? 's' : ''})`;
   };
@@ -240,20 +259,19 @@ export function RulesClient() {
   return (
     <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
       <header className="mb-8">
-        <Link href="/" className="text-sm text-blue-600 underline">
+        <Link href="/" className="text-sm text-blue-600 dark:text-blue-400 underline">
           ← Retour à l'accueil
         </Link>
         <h1 className="mt-2 text-3xl font-bold sm:text-4xl">Règles du jeu</h1>
-        <p className="mt-1 text-zinc-600">
+        <p className="mt-1 text-zinc-600 dark:text-zinc-400">
           Tout ce qu'il faut savoir avant de lancer une partie. Bonne soirée 🍻
         </p>
       </header>
 
-      {/* Sticky session settings — re-rendered numbers throughout the page reflect these */}
-      <section className="sticky top-0 z-10 -mx-4 mb-8 border-b border-zinc-200 bg-white/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
+      <section className="sticky top-0 z-10 -mx-4 mb-8 border-b border-zinc-200 bg-white/95 px-4 py-3 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/95 sm:-mx-6 sm:px-6">
         <div className="flex flex-wrap items-center gap-3 text-sm">
-          <span className="font-semibold text-zinc-700">Pour cette page :</span>
-          <div className="inline-flex rounded-full border border-zinc-200 bg-white">
+          <span className="font-semibold text-zinc-700 dark:text-zinc-300">Pour cette page :</span>
+          <div className="inline-flex rounded-full border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
             {DIFFICULTY_LEVELS.map((lvl) => {
               const m = DIFFICULTY_PRESETS[lvl];
               const active = difficulty === lvl;
@@ -263,7 +281,9 @@ export function RulesClient() {
                   type="button"
                   onClick={() => setDifficulty(lvl)}
                   className={`rounded-full px-3 py-1 transition ${
-                    active ? 'bg-blue-600 text-white' : 'text-zinc-700 hover:bg-zinc-100'
+                    active
+                      ? 'bg-blue-600 text-white dark:bg-blue-500'
+                      : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700'
                   }`}
                 >
                   {m.emoji} {m.label}
@@ -271,7 +291,7 @@ export function RulesClient() {
               );
             })}
           </div>
-          <div className="inline-flex flex-wrap rounded-full border border-zinc-200 bg-white">
+          <div className="inline-flex flex-wrap rounded-full border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800">
             {EQUIVALENCE_KINDS.map((k) => {
               const r = EQUIVALENCE_TABLE[k];
               const active = equivalence === k;
@@ -281,7 +301,9 @@ export function RulesClient() {
                   type="button"
                   onClick={() => setEquivalence(k)}
                   className={`rounded-full px-3 py-1 transition ${
-                    active ? 'bg-amber-500 text-white' : 'text-zinc-700 hover:bg-zinc-100'
+                    active
+                      ? 'bg-amber-500 text-white dark:bg-amber-400'
+                      : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700'
                   }`}
                   title={r.label}
                 >
@@ -290,14 +312,14 @@ export function RulesClient() {
               );
             })}
           </div>
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
             Tous les chiffres ci-dessous se mettent à jour en temps réel.
           </p>
         </div>
       </section>
 
       <Section title="🚀 60 secondes pour comprendre" anchor="quickstart">
-        <ul className="space-y-2 text-zinc-800">
+        <ul className="space-y-2 text-zinc-800 dark:text-zinc-200">
           <li>
             <strong>Le but :</strong> arriver <em>exactement</em> sur la case 63.
           </li>
@@ -309,9 +331,10 @@ export function RulesClient() {
             ou bouger. Quelques-unes (sorcière, bromance) tissent du social.
           </li>
           <li>
-            <strong>Les variantes :</strong> le host choisit la difficulté ({DIFFICULTY_PRESETS[difficulty].label}{' '}
-            ici → cartes valent {cfg.sipsPerCard} gorgée{cfg.sipsPerCard > 1 ? 's' : ''}). Chaque
-            joueur peut remplacer ses gorgées par une équivalence ({equivRule.label}).
+            <strong>Les variantes :</strong> le host choisit la difficulté (
+            {DIFFICULTY_PRESETS[difficulty].label} ici → cartes valent {cfg.sipsPerCard} gorgée
+            {cfg.sipsPerCard > 1 ? 's' : ''}). Chaque joueur peut remplacer ses gorgées par une
+            équivalence ({equivRule.label}).
           </li>
         </ul>
       </Section>
@@ -326,7 +349,7 @@ export function RulesClient() {
           changent de comportement (au lieu de distribuer, tu bois).
         </p>
         <p className="mt-3">
-          <Link href="/preview?seed=hello" className="text-blue-600 underline">
+          <Link href="/preview?seed=hello" className="text-blue-600 dark:text-blue-400 underline">
             Voir un plateau d'exemple →
           </Link>
         </p>
@@ -340,14 +363,14 @@ export function RulesClient() {
           <li>Si une modal s'ouvre (shop, bromance, pilule…), il choisit.</li>
           <li>Tour suivant.</li>
         </ol>
-        <p className="mt-3 text-sm text-zinc-600">
+        <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
           Cas spéciaux : en <strong>prison</strong>, tu lances pour t'échapper (6 = libéré). En{' '}
           <strong>trou</strong>, tu n'avances que d'une case par tour pendant N tours.
         </p>
       </Section>
 
       <Section title="🃏 Les 19 cases" anchor="cases">
-        <p className="text-sm text-zinc-600">
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
           Cliquez (mentalement) sur celles qui vous intriguent — chaque carte a son effet complet.
         </p>
         <input
@@ -355,11 +378,11 @@ export function RulesClient() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Chercher une case (ex: prison, rouge, sorcière…)"
-          className="mt-3 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          className="mt-3 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
           aria-label="Chercher une case"
         />
         {searchLower && (
-          <p className="mt-2 text-xs text-zinc-500">
+          <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
             {matchedCases.length} résultat{matchedCases.length > 1 ? 's' : ''}
           </p>
         )}
@@ -372,17 +395,19 @@ export function RulesClient() {
                 key={c.id}
                 id={c.id}
                 onClick={() => setOpenCase(c)}
-                className={`rounded-2xl ${meta.bg} p-4 ring-1 ${meta.ring} text-left transition hover:ring-2 hover:ring-blue-300`}
+                className={`rounded-2xl ${meta.bg} p-4 ring-1 ${meta.ring} text-left transition hover:ring-2 hover:ring-blue-300 dark:hover:ring-blue-700`}
               >
                 <header className="flex items-baseline justify-between">
-                  <h3 className="text-base font-semibold text-zinc-900">
+                  <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
                     <span className="mr-1 text-2xl">{c.emoji}</span> {c.name}
                   </h3>
-                  <span className="text-xs text-zinc-500">{meta.label}</span>
+                  <span className="text-xs text-zinc-500 dark:text-zinc-400">{meta.label}</span>
                 </header>
-                <p className="mt-1 text-sm font-medium text-zinc-700">{c.short}</p>
+                <p className="mt-1 text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                  {c.short}
+                </p>
                 <p
-                  className="mt-2 text-sm text-zinc-700"
+                  className="mt-2 text-sm text-zinc-700 dark:text-zinc-300"
                   dangerouslySetInnerHTML={{ __html: bold(fillTokens(c.effect)) }}
                 />
               </button>
@@ -405,7 +430,7 @@ export function RulesClient() {
           mécaniques :
         </p>
         <table className="mt-3 w-full text-sm">
-          <thead className="text-left text-xs uppercase tracking-wide text-zinc-500">
+          <thead className="text-left text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
             <tr>
               <th className="py-1">Niveau</th>
               <th className="py-1">Cartes ♠♥♦♣</th>
@@ -420,10 +445,17 @@ export function RulesClient() {
               return (
                 <tr
                   key={lvl}
-                  className={active ? 'border-t border-blue-200 bg-blue-50' : 'border-t border-zinc-100'}
+                  className={
+                    active
+                      ? 'border-t border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30'
+                      : 'border-t border-zinc-100 dark:border-zinc-800'
+                  }
                 >
                   <td className="py-2 font-semibold">
-                    {m.emoji} {m.label} {active && <span className="ml-1 text-xs text-blue-600">(actif)</span>}
+                    {m.emoji} {m.label}{' '}
+                    {active && (
+                      <span className="ml-1 text-xs text-blue-600 dark:text-blue-400">(actif)</span>
+                    )}
                   </td>
                   <td className="py-2 font-mono">{m.config.sipsPerCard} gorgée(s)</td>
                   <td className="py-2 font-mono">{m.config.ptMalusSips}</td>
@@ -433,16 +465,17 @@ export function RulesClient() {
             })}
           </tbody>
         </table>
-        <p className="mt-3 text-sm text-zinc-600">
-          Le générateur de plateau lui-même reste identique pour l'instant (à venir : board "punitif"
-          en hardcore avec plus de prisons et de zones soif).
+        <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
+          Le générateur de plateau lui-même reste identique pour l'instant (à venir : board
+          "punitif" en hardcore avec plus de prisons et de zones soif).
         </p>
       </Section>
 
       <Section title="💪 Équivalences (pas de gorgées ?)" anchor="equivalences">
         <p>
-          Chaque joueur choisit son équivalence en lobby. Tes gorgées sont automatiquement converties
-          dans tes propres unités, et le ricochet bromance honore l'équivalence de chaque partenaire.
+          Chaque joueur choisit son équivalence en lobby. Tes gorgées sont automatiquement
+          converties dans tes propres unités, et le ricochet bromance honore l'équivalence de chaque
+          partenaire.
         </p>
         <ul className="mt-3 space-y-2">
           {EQUIVALENCE_KINDS.map((k) => {
@@ -452,19 +485,26 @@ export function RulesClient() {
               <li
                 key={k}
                 className={`flex items-baseline gap-3 rounded-lg border px-3 py-2 ${
-                  active ? 'border-amber-400 bg-amber-50' : 'border-zinc-200 bg-white'
+                  active
+                    ? 'border-amber-400 bg-amber-50 dark:border-amber-600 dark:bg-amber-950/30'
+                    : 'border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800'
                 }`}
               >
                 <span className="text-2xl">{r.emoji}</span>
                 <div>
-                  <div className="font-semibold text-zinc-900">{r.label}</div>
-                  <div className="text-sm text-zinc-600">
+                  <div className="font-semibold text-zinc-900 dark:text-zinc-100">{r.label}</div>
+                  <div className="text-sm text-zinc-600 dark:text-zinc-400">
                     {k === 'drinks' && 'Comportement par défaut.'}
-                    {k === 'sit_out' && 'Le tour est juste passé — pas de boisson, pas d\'unité comptée.'}
+                    {k === 'sit_out' &&
+                      "Le tour est juste passé — pas de boisson, pas d'unité comptée."}
                     {k !== 'drinks' && k !== 'sit_out' && (
                       <>
-                        1 gorgée = <strong>{r.perSip} {r.unit}</strong>. Une carte rouge à{' '}
-                        {cfg.sipsPerCard} gorgée(s) devient {cfg.sipsPerCard * r.perSip} {r.unit}.
+                        1 gorgée ={' '}
+                        <strong>
+                          {r.perSip} {r.unit}
+                        </strong>
+                        . Une carte rouge à {cfg.sipsPerCard} gorgée(s) devient{' '}
+                        {cfg.sipsPerCard * r.perSip} {r.unit}.
                       </>
                     )}
                   </div>
@@ -473,16 +513,18 @@ export function RulesClient() {
             );
           })}
         </ul>
-        <p className="mt-3 text-sm text-zinc-600">
+        <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
           Note : le host peut choisir si les équivalences comptent ou non dans le leaderboard
-          général (option <code className="rounded bg-zinc-100 px-1">countEquivalenceAsSips</code>).
+          général (option{' '}
+          <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">countEquivalenceAsSips</code>
+          ).
         </p>
       </Section>
 
       <Section title="🤔 FAQ et cas limites" anchor="faq">
         <Faq q="Si j'arrive sur prison via un portail, je vais en prison ?">
-          Non. <strong>Arriver via un portail ne déclenche pas l'effet de la case</strong>. Le portail
-          te dépose sur la case puis le tour s'arrête.
+          Non. <strong>Arriver via un portail ne déclenche pas l'effet de la case</strong>. Le
+          portail te dépose sur la case puis le tour s'arrête.
         </Faq>
         <Faq q="Si je rate la potion en disant rien, je bois combien ?">
           Tu bois <strong>le double</strong> de l'offre. La sorcière propose {cfg.witchPotionSips}{' '}
@@ -502,8 +544,8 @@ export function RulesClient() {
         </Faq>
       </Section>
 
-      <footer className="mt-12 border-t border-zinc-200 pt-6 text-sm text-zinc-500">
-        <Link href="/" className="text-blue-600 underline">
+      <footer className="mt-12 border-t border-zinc-200 pt-6 text-sm text-zinc-500 dark:border-zinc-800">
+        <Link href="/" className="text-blue-600 dark:text-blue-400 underline">
           ← Créer ou rejoindre une partie
         </Link>
       </footer>
@@ -536,24 +578,24 @@ function CaseDetailModal({
         onClick={(e) => e.stopPropagation()}
       >
         <header className="flex items-baseline justify-between">
-          <h2 className="text-2xl font-bold text-zinc-900">
+          <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
             <span className="mr-1 text-3xl">{info.emoji}</span> {info.name}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-2xl text-zinc-500 hover:text-zinc-900"
+            className="text-2xl text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
             aria-label="Fermer"
           >
             ×
           </button>
         </header>
-        <p className="mt-2 text-sm font-medium text-zinc-700">{info.short}</p>
+        <p className="mt-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">{info.short}</p>
         <p
-          className="mt-3 text-base text-zinc-800"
+          className="mt-3 text-base text-zinc-800 dark:text-zinc-200"
           dangerouslySetInnerHTML={{ __html: renderEffect(info.effect) }}
         />
-        <p className="mt-4 text-xs text-zinc-500">
+        <p className="mt-4 text-xs text-zinc-500 dark:text-zinc-400">
           {meta.label} · valeurs pour <strong>{difficultyLabel}</strong> ·{' '}
           <strong>{equivalenceLabel}</strong>
         </p>
@@ -573,22 +615,28 @@ function Section({
 }) {
   return (
     <section id={anchor} className="mb-10 scroll-mt-24">
-      <h2 className="mb-3 text-2xl font-bold text-zinc-900">{title}</h2>
-      <div className="space-y-2 text-zinc-800">{children}</div>
+      <h2 className="mb-3 text-2xl font-bold text-zinc-900 dark:text-zinc-100">{title}</h2>
+      <div className="space-y-2 text-zinc-800 dark:text-zinc-200">{children}</div>
     </section>
   );
 }
 
 function Faq({ q, children }: { q: string; children: React.ReactNode }) {
   return (
-    <details className="mb-2 rounded-lg border border-zinc-200 bg-white p-3">
-      <summary className="cursor-pointer font-semibold text-zinc-800">{q}</summary>
-      <div className="mt-2 text-sm text-zinc-700">{children}</div>
+    <details className="mb-2 rounded-lg border border-zinc-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-800">
+      <summary className="cursor-pointer font-semibold text-zinc-800 dark:text-zinc-200">
+        {q}
+      </summary>
+      <div className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">{children}</div>
     </details>
   );
 }
 
-/** Tiny markdown-bold replacement so the rule strings can highlight key bits without a full parser. */
 function bold(text: string): string {
-  return text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  const escaped = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+  return escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 }

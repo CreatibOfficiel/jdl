@@ -14,6 +14,7 @@ interface GivePotionMessage {
 }
 
 export function handleGivePotion(room: GameRoom, client: Client, message: GivePotionMessage): void {
+  if (room.state.phase !== 'playing') return;
   if (room.state.activeModal !== '') return;
 
   const player = room.state.players.get(client.sessionId);
@@ -40,6 +41,10 @@ export function handleGivePotion(room: GameRoom, client: Client, message: GivePo
   });
 
   room.clock.setTimeout(() => {
+    if (room.state.phase !== 'playing') {
+      closeWitchModal(room);
+      return;
+    }
     // Only fire if the offer is still pending (not consumed by say_thanks)
     if (room.state.activeModal !== 'witch_potion') return;
     if (room.state.witchOffererId !== player.id) return;

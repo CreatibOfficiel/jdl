@@ -40,7 +40,9 @@ export function sipsGivenSince(
 
 /** Build a from→to→count matrix. Self-drinks (fromId='') and distribute-without-target
  *  (toId='') are filtered out — the heatmap only shows directed pair traffic. */
-export function pairMatrix(events: ReadonlyArray<ClientSipEvent>): Map<string, Map<string, number>> {
+export function pairMatrix(
+  events: ReadonlyArray<ClientSipEvent>,
+): Map<string, Map<string, number>> {
   const map = new Map<string, Map<string, number>>();
   for (const e of events) {
     if (!e.fromId || !e.toId) continue;

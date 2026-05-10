@@ -32,7 +32,7 @@ export function EquivalenceTaskModal({ task, onDone, onSkip }: EquivalenceTaskMo
           transition={{ duration: 0.2 }}
         >
           <motion.div
-            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+            className="w-full max-w-md rounded-2xl bg-white dark:bg-zinc-800 p-6 shadow-xl"
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -43,14 +43,14 @@ export function EquivalenceTaskModal({ task, onDone, onSkip }: EquivalenceTaskMo
               <button
                 type="button"
                 onClick={onSkip}
-                className="rounded-xl border border-zinc-300 bg-white px-4 py-3 text-zinc-700 transition hover:bg-zinc-50"
+                className="rounded-xl border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 dark:border-zinc-600 dark:bg-zinc-800 px-4 py-3 text-zinc-700 dark:text-zinc-300 transition hover:bg-zinc-50 dark:hover:bg-zinc-700 dark:bg-zinc-900"
               >
                 Je passe
               </button>
               <button
                 type="button"
                 onClick={onDone}
-                className="rounded-xl bg-amber-500 px-4 py-3 font-semibold text-white shadow-sm transition hover:bg-amber-600"
+                className="rounded-xl bg-amber-500 dark:bg-amber-400 px-4 py-3 font-semibold text-white shadow-sm transition hover:bg-amber-600"
               >
                 ✅ J'ai fini
               </button>
@@ -68,8 +68,10 @@ function Body({ task }: { task: EquivalenceTask }) {
     return (
       <div className="text-center">
         <div className="mb-2 text-5xl">{rule.emoji}</div>
-        <h2 className="text-2xl font-bold text-zinc-900">Tu passes ce coup-ci</h2>
-        <p className="mt-2 text-sm text-zinc-600">
+        <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+          Tu passes ce coup-ci
+        </h2>
+        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
           {task.sips} gorgée{task.sips > 1 ? 's' : ''} évitée{task.sips > 1 ? 's' : ''} — pas de
           tâche à faire, profite de la pause.
         </p>
@@ -79,9 +81,9 @@ function Body({ task }: { task: EquivalenceTask }) {
   return (
     <div className="text-center">
       <div className="mb-2 text-5xl">{rule.emoji}</div>
-      <h2 className="text-3xl font-bold text-zinc-900">{task.units}</h2>
-      <p className="text-xl font-semibold text-zinc-800">{rule.unit}</p>
-      <p className="mt-2 text-sm text-zinc-600">
+      <h2 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">{task.units}</h2>
+      <p className="text-xl font-semibold text-zinc-800 dark:text-zinc-200">{rule.unit}</p>
+      <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
         Au lieu de {task.sips} gorgée{task.sips > 1 ? 's' : ''}. Allez, tu peux le faire 💪
       </p>
     </div>

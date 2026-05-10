@@ -15,12 +15,7 @@ export function getTopWinners(limit = 10) {
 }
 
 export function getTopAthletes(limit = 10) {
-  return db
-    .select()
-    .from(players)
-    .orderBy(desc(players.totalEquivalenceUnits))
-    .limit(limit)
-    .all();
+  return db.select().from(players).orderBy(desc(players.totalEquivalenceUnits)).limit(limit).all();
 }
 
 export function getPlayerById(playerId: string) {
@@ -60,7 +55,13 @@ export function getTopPairs(limit = 10) {
       total: sql<number>`SUM(${sipEvents.count})`.as('total'),
     })
     .from(sipEvents)
-    .where(and(isNotNull(sipEvents.fromId), sql`${sipEvents.fromId} != ''`, sql`${sipEvents.toId} != ''`))
+    .where(
+      and(
+        isNotNull(sipEvents.fromId),
+        sql`${sipEvents.fromId} != ''`,
+        sql`${sipEvents.toId} != ''`,
+      ),
+    )
     .groupBy(sipEvents.fromId, sipEvents.toId)
     .orderBy(desc(sql`total`))
     .limit(limit)

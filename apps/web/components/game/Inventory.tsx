@@ -22,7 +22,7 @@ export function Inventory({ inventory, onUse }: InventoryProps) {
   });
 
   if (items.length === 0) {
-    return <p className="text-xs italic text-zinc-400">Inventaire vide.</p>;
+    return <p className="text-xs italic text-zinc-400 dark:text-zinc-500">Inventaire vide.</p>;
   }
 
   // Group by item type with count
@@ -38,9 +38,9 @@ export function Inventory({ inventory, onUse }: InventoryProps) {
             <span className="text-xl" aria-hidden="true">
               {meta.emoji}
             </span>
-            <span className="flex-1 text-sm text-zinc-700">{meta.label}</span>
+            <span className="flex-1 text-sm text-zinc-700 dark:text-zinc-300">{meta.label}</span>
             {count > 1 && (
-              <span className="rounded-full bg-zinc-200 px-1.5 text-xs font-bold text-zinc-700">
+              <span className="rounded-full bg-zinc-200 dark:bg-zinc-700 px-1.5 text-xs font-bold text-zinc-700 dark:text-zinc-300">
                 ×{count}
               </span>
             )}
@@ -48,7 +48,7 @@ export function Inventory({ inventory, onUse }: InventoryProps) {
               <button
                 type="button"
                 onClick={() => onUse(itemType)}
-                className="rounded-md bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700"
+                className="rounded-md bg-blue-600 dark:bg-blue-500 px-2 py-1 text-xs font-medium text-white hover:bg-blue-700 dark:hover:bg-blue-600"
               >
                 Utiliser
               </button>

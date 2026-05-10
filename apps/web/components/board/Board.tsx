@@ -7,15 +7,23 @@ import { Case } from './Case';
 import { Pawn } from './Pawn';
 
 const COLOR_BY_ID = new Map(PAWN_COLORS.map((c) => [c.id, c.hex]));
+const GEOMETRIES = getAllCaseGeometries();
 
 interface BoardProps {
   board: BoardData;
   players?: ReadonlyArray<ClientPlayer>;
   activeId?: string;
+  highlightCaseIndex?: number | null;
+  highlightColor?: 'red' | 'blue' | 'green' | 'gold';
 }
 
-export function Board({ board, players = [], activeId }: BoardProps) {
-  const geometries = getAllCaseGeometries();
+export function Board({
+  board,
+  players = [],
+  activeId,
+  highlightCaseIndex,
+  highlightColor,
+}: BoardProps) {
   const treasureSet = new Set(board.treasureCases);
   const tzStart = board.thirstZone.start;
   const tzEnd = tzStart + board.thirstZone.length - 1;
@@ -36,7 +44,7 @@ export function Board({ board, players = [], activeId }: BoardProps) {
     >
       <title>{`Plateau ${board.seed}`}</title>
       {board.cases.map((caseData) => {
-        const geom = geometries[caseData.index - 1];
+        const geom = GEOMETRIES[caseData.index - 1];
         if (!geom) return null;
         const inThirst = caseData.index >= tzStart && caseData.index <= tzEnd;
         return (
@@ -46,6 +54,11 @@ export function Board({ board, players = [], activeId }: BoardProps) {
             data={caseData}
             isTreasure={treasureSet.has(caseData.index)}
             isInThirstZone={inThirst}
+            highlight={
+              highlightCaseIndex != null && caseData.index === highlightCaseIndex
+                ? (highlightColor ?? 'gold')
+                : null
+            }
           />
         );
       })}
@@ -57,7 +70,13 @@ export function Board({ board, players = [], activeId }: BoardProps) {
         return (
           <Pawn
             key={p.id}
-            player={{ id: p.id, name: p.name, hex, emoji: p.emoji, position: p.position }}
+            player={{
+              id: p.id,
+              name: p.name,
+              hex,
+              emoji: p.emoji || p.name.charAt(0).toUpperCase(),
+              position: p.position,
+            }}
             isActive={p.id === activeId}
             cluster={{ index: clusterIndex, total: cluster.length }}
             isTeleport={p.lastTeleport}

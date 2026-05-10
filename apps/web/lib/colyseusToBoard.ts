@@ -18,5 +18,7 @@ export function colyseusStateToBoard(state: ClientGameState): Board {
     cases,
     thirstZone: { start: state.thirstZoneStart, length: state.thirstZoneLength },
     treasureCases: [],
+    // Treasures are intentionally empty here — they are hidden during play
+    // and only revealed server-side when a player opens them with a crowbar.
   };
 }

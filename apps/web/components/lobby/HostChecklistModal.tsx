@@ -14,7 +14,7 @@ const ITEMS = [
   { id: 'snacks', label: '🍕 Quelque chose à grignoter' },
   { id: 'age', label: '🆔 Personne sous 18 ans qui boit' },
   { id: 'ride', label: '🚗 Conducteur désigné OU tout le monde reste sur place' },
-  { id: 'vibes', label: "✨ Tout le monde est OK pour jouer (personne forcé)" },
+  { id: 'vibes', label: '✨ Tout le monde est OK pour jouer (personne forcé)' },
 ];
 
 const CEILING_PRESETS = [
@@ -47,39 +47,41 @@ export function HostChecklistModal({ open, onAck, onClose }: HostChecklistModalP
           transition={{ duration: 0.2 }}
         >
           <motion.div
-            className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl"
+            className="w-full max-w-md rounded-2xl bg-white dark:bg-zinc-800 p-5 shadow-xl"
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
           >
             <header className="mb-3">
-              <h2 className="text-xl font-bold text-zinc-900">Avant de lancer la soirée</h2>
-              <p className="mt-1 text-sm text-zinc-600">
+              <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
+                Avant de lancer la soirée
+              </h2>
+              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                 Petite checklist anti-galère. C'est ta dernière vérif avant de démarrer.
               </p>
             </header>
             <ul className="space-y-2">
               {ITEMS.map((it) => (
                 <li key={it.id}>
-                  <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-zinc-200 p-3 hover:bg-zinc-50">
+                  <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-zinc-200 dark:border-zinc-700 p-3 hover:bg-zinc-50 dark:hover:bg-zinc-700 dark:bg-zinc-900">
                     <input
                       type="checkbox"
                       checked={checked.has(it.id)}
                       onChange={() => toggle(it.id)}
-                      className="h-5 w-5 rounded border-zinc-300"
+                      className="h-5 w-5 rounded border-zinc-300 dark:border-zinc-600"
                     />
-                    <span className="text-sm text-zinc-800">{it.label}</span>
+                    <span className="text-sm text-zinc-800 dark:text-zinc-200">{it.label}</span>
                   </label>
                 </li>
               ))}
             </ul>
 
-            <fieldset className="mt-4 rounded-lg border border-zinc-200 p-3">
-              <legend className="px-1 text-sm font-medium text-zinc-700">
+            <fieldset className="mt-4 rounded-lg border border-zinc-200 dark:border-zinc-700 p-3">
+              <legend className="px-1 text-sm font-medium text-zinc-700 dark:text-zinc-300">
                 Plafond de gorgées par joueur (optionnel)
               </legend>
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
                 Au-delà du plafond, les sips passent automatiquement en équivalence sport.
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -91,8 +93,8 @@ export function HostChecklistModal({ open, onAck, onClose }: HostChecklistModalP
                     aria-pressed={ceiling === p.value}
                     className={`rounded-full border px-3 py-1 text-xs ${
                       ceiling === p.value
-                        ? 'border-blue-500 bg-blue-50 text-blue-700'
-                        : 'border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50'
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300'
+                        : 'border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50'
                     }`}
                   >
                     {p.label}
@@ -105,7 +107,7 @@ export function HostChecklistModal({ open, onAck, onClose }: HostChecklistModalP
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 rounded-xl border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-700"
+                className="flex-1 rounded-xl border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 dark:border-zinc-600 dark:bg-zinc-800 px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300"
               >
                 Plus tard
               </button>
@@ -113,7 +115,7 @@ export function HostChecklistModal({ open, onAck, onClose }: HostChecklistModalP
                 type="button"
                 disabled={!allChecked}
                 onClick={() => onAck(ceiling)}
-                className="flex-1 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-zinc-300"
+                className="flex-1 rounded-xl bg-blue-600 dark:bg-blue-500 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-blue-700 dark:hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-zinc-300 dark:disabled:bg-zinc-600"
               >
                 {allChecked ? 'OK, on peut commencer' : 'Coche tout pour valider'}
               </button>

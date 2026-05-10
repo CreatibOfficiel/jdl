@@ -3,7 +3,7 @@
 import type { ClientPlayer } from '@/types/colyseus';
 import { CENTER, getCaseGeometry, VIEWBOX_SIZE } from './boardGeometry';
 
-const START_BASE_Y = VIEWBOX_SIZE - 16;
+const START_BASE_Y = VIEWBOX_SIZE - 20;
 const START_SPACING = 22;
 
 function getCenter(

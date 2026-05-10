@@ -2,6 +2,8 @@ import type { Client } from 'colyseus';
 import type { GameRoom } from '../../rooms/GameRoom';
 import { pushEvent } from '../eventLog';
 import { addItem } from '../inventoryManager';
+import { applyDrink } from '../sipsHelper';
+import { endTurn } from '../turnHandler';
 
 interface ShopItem {
   itemType: string;
@@ -32,7 +34,7 @@ export function handleBuyItem(room: GameRoom, client: Client, message: BuyItemMe
 
   addItem(player, item.itemType);
   player.shopPurchases += 1;
-  player.sipsTaken += item.cost;
+  applyDrink(room, { player, sips: item.cost, emoji: '🛒', kind: 'shop_buy' });
 
   room.state.activeModal = '';
   room.state.activeModalPlayerId = '';
@@ -40,9 +42,11 @@ export function handleBuyItem(room: GameRoom, client: Client, message: BuyItemMe
   pushEvent(room.state, {
     playerId: player.id,
     kind: 'shop_buy',
-    text: `🛒 ${player.name} achète ${item.emoji} ${item.name} (boit ${item.cost} gorgée(s))`,
+    text: `🛒 ${player.name} achète ${item.emoji} ${item.name}`,
     importance: 'normal',
   });
+
+  endTurn(room);
 }
 
 export function handleSkipShop(room: GameRoom, client: Client): void {
@@ -59,4 +63,6 @@ export function handleSkipShop(room: GameRoom, client: Client): void {
     text: `🛒 ${player?.name ?? '?'} passe le shop`,
     importance: 'low',
   });
+
+  endTurn(room);
 }

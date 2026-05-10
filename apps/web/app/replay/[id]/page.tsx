@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
-import { ReplayClient } from './ReplayClient';
 import { fetchGameDetail, fetchGameSipEvents } from '@/lib/statsApi';
+import { ReplayClient } from './ReplayClient';
 
 export const dynamic = 'force-dynamic';
 

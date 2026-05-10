@@ -4,7 +4,7 @@ import { PAWN_COLORS } from '@jeu-soiree/shared';
 import confetti from 'canvas-confetti';
 import { motion } from 'motion/react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { badge, evaluateBadges, fromClientPlayer } from '@/lib/badges';
 import type { ClientGameState, ClientPlayer } from '@/types/colyseus';
 
@@ -78,9 +78,7 @@ export function FinishedView({ winnerName, isMe, players, state }: FinishedViewP
 
   const playersArr = [...players];
   const winnerId = state?.winnerId ?? '';
-  const badgeMap = evaluateBadges(
-    playersArr.map((p) => fromClientPlayer(p, p.id === winnerId)),
-  );
+  const badgeMap = evaluateBadges(playersArr.map((p) => fromClientPlayer(p, p.id === winnerId)));
   const drinker = pickWinnerByMax(playersArr, (p) => p.sipsTaken);
   const giver = pickWinnerByMax(playersArr, (p) => p.sipsGiven);
   const roller = pickWinnerByMax(playersArr, (p) => p.diceRolls);
@@ -93,13 +91,18 @@ export function FinishedView({ winnerName, isMe, players, state }: FinishedViewP
     { emoji: '🛒', label: 'Plus dépensier', player: buyer.winner, value: buyer.value },
   ];
 
+  const trophyDelays = useMemo(
+    () => trophies.map((t) => 0.3 + (t.label.charCodeAt(0) / 255) * 0.4),
+    [trophies],
+  );
+
   return (
     <section className="mx-auto max-w-2xl">
       <motion.div
         initial={{ scale: 0.6, opacity: 0, y: 30 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 220, damping: 18 }}
-        className="rounded-3xl border-2 border-amber-400 bg-gradient-to-b from-amber-50 to-orange-50 p-6 text-center shadow-xl"
+        className="rounded-3xl border-2 border-amber-400 dark:border-amber-600 bg-gradient-to-b from-amber-50 to-orange-50 dark:from-amber-950/50 dark:to-orange-950/50 p-6 text-center shadow-xl"
       >
         <motion.div
           animate={{ rotate: [0, -5, 5, -5, 0], scale: [1, 1.1, 1] }}
@@ -108,34 +111,42 @@ export function FinishedView({ winnerName, isMe, players, state }: FinishedViewP
         >
           🏆
         </motion.div>
-        <h1 className="mt-3 text-3xl font-bold text-amber-900">
+        <h1 className="mt-3 text-3xl font-bold text-amber-900 dark:text-amber-200">
           {isMe ? 'Tu gagnes !' : `${winnerName} gagne !`}
         </h1>
-        <p className="mt-1 text-sm text-amber-800">La partie est terminée. Récap de la soirée :</p>
+        <p className="mt-1 text-sm text-amber-800 dark:text-amber-300">
+          La partie est terminée. Récap de la soirée :
+        </p>
       </motion.div>
 
       <ul className="mt-6 grid grid-cols-2 gap-3">
-        {trophies.map((t) => (
+        {trophies.map((t, i) => (
           <motion.li
             key={t.label}
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 + Math.random() * 0.4 }}
-            className="rounded-2xl border border-zinc-200 bg-white p-3 text-center"
+            transition={{ delay: trophyDelays[i] }}
+            className="rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 dark:border-zinc-700 dark:bg-zinc-800 p-3 text-center"
           >
             <p className="text-3xl">{t.emoji}</p>
-            <p className="mt-1 text-xs uppercase tracking-wide text-zinc-500">{t.label}</p>
-            <p className="mt-1 font-bold text-zinc-900">{t.player?.name ?? '—'}</p>
-            <p className="text-xs text-zinc-500">{t.value > 0 ? `${t.value}` : ''}</p>
+            <p className="mt-1 text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+              {t.label}
+            </p>
+            <p className="mt-1 font-bold text-zinc-900 dark:text-zinc-100">
+              {t.player?.name ?? '—'}
+            </p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              {t.value > 0 ? `${t.value}` : ''}
+            </p>
           </motion.li>
         ))}
       </ul>
 
-      <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+      <section className="mt-6 rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 dark:border-zinc-700 dark:bg-zinc-800 p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
           Récap par joueur
         </h2>
-        <ul className="mt-2 divide-y divide-zinc-100">
+        <ul className="mt-2 divide-y divide-zinc-100 dark:divide-zinc-800">
           {playersArr.map((p) => {
             const hex = COLOR_BY_ID.get(p.color) ?? '#999';
             const codes = badgeMap.get(p.id) ?? [];
@@ -148,8 +159,10 @@ export function FinishedView({ winnerName, isMe, players, state }: FinishedViewP
                 >
                   {p.emoji}
                 </span>
-                <span className="flex-1 font-medium text-zinc-900">{p.name}</span>
-                <span className="font-mono text-xs text-zinc-500">
+                <span className="flex-1 font-medium text-zinc-900 dark:text-zinc-100">
+                  {p.name}
+                </span>
+                <span className="font-mono text-xs text-zinc-500 dark:text-zinc-400">
                   🍻 {p.sipsTaken} · 🎁 {p.sipsGiven} · 🎲 {p.diceRolls}
                 </span>
                 {codes.length > 0 && (
@@ -176,40 +189,47 @@ export function FinishedView({ winnerName, isMe, players, state }: FinishedViewP
         </ul>
       </section>
 
-      <section className="mt-6 rounded-2xl border border-blue-200 bg-blue-50 p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-blue-700">
+      <section className="mt-6 rounded-2xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30 p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300">
           💧 Sécurité & hydratation
         </h2>
         <div className="mt-2 grid grid-cols-3 gap-2 text-center text-sm">
           <div>
             <p className="text-2xl">⚠️</p>
-            <p className="font-mono font-bold text-zinc-900">{totalCaps}</p>
-            <p className="text-xs text-zinc-500">caps déclenchés</p>
+            <p className="font-mono font-bold text-zinc-900 dark:text-zinc-100">{totalCaps}</p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">caps déclenchés</p>
           </div>
           <div>
             <p className="text-2xl">🛑</p>
-            <p className="font-mono font-bold text-zinc-900">{totalAutoSwaps}</p>
-            <p className="text-xs text-zinc-500">auto-swaps</p>
+            <p className="font-mono font-bold text-zinc-900 dark:text-zinc-100">{totalAutoSwaps}</p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">auto-swaps</p>
           </div>
           <div>
             <p className="text-2xl">💧</p>
-            <p className="font-mono font-bold text-zinc-900">{hydrationPrompts}</p>
-            <p className="text-xs text-zinc-500">pauses hydratation</p>
+            <p className="font-mono font-bold text-zinc-900 dark:text-zinc-100">
+              {hydrationPrompts}
+            </p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">pauses hydratation</p>
           </div>
         </div>
-        <p className="mt-3 text-center text-sm text-blue-800">
+        <p className="mt-3 text-center text-sm text-blue-800 dark:text-blue-300">
           Pense à boire de l'eau, à manger un truc et à dire à ton conducteur si t'as besoin.
         </p>
       </section>
 
       {state?.boardSeed && (
-        <ShareGameButton roomId={typeof window !== 'undefined' ? window.location.pathname.split('/').pop() ?? '' : ''} seed={state.boardSeed} />
+        <ShareGameButton
+          roomId={
+            typeof window !== 'undefined' ? (window.location.pathname.split('/').pop() ?? '') : ''
+          }
+          seed={state.boardSeed}
+        />
       )}
 
       <div className="mt-6 flex flex-col gap-2 sm:flex-row">
         {cooldownActive ? (
           <div
-            className="flex-1 rounded-xl border border-zinc-300 bg-zinc-100 px-4 py-3 text-center font-semibold text-zinc-500"
+            className="flex-1 rounded-xl border border-zinc-300 dark:border-zinc-600 bg-zinc-100 dark:bg-zinc-800 px-4 py-3 text-center font-semibold text-zinc-500 dark:text-zinc-400"
             aria-disabled="true"
           >
             💧 Pause obligatoire — {cooldownSec}s
@@ -224,7 +244,7 @@ export function FinishedView({ winnerName, isMe, players, state }: FinishedViewP
         )}
         <Link
           href="/stats"
-          className="flex-1 rounded-xl border border-zinc-300 bg-white px-4 py-3 text-center font-medium text-zinc-700 hover:bg-zinc-50"
+          className="flex-1 rounded-xl border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 dark:border-zinc-600 dark:bg-zinc-800 px-4 py-3 text-center font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 dark:bg-zinc-900"
         >
           📊 Voir les stats
         </Link>
@@ -268,7 +288,7 @@ function ShareGameButton({ roomId, seed }: { roomId: string; seed: string }) {
     <button
       type="button"
       onClick={handleShare}
-      className="mt-4 w-full rounded-xl border border-blue-300 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700 hover:bg-blue-100"
+      className="mt-4 w-full rounded-xl border border-blue-300 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30 px-4 py-3 text-sm font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-950/50"
     >
       {copied ? '✅ Lien copié !' : '🔗 Partager la soirée'}
     </button>

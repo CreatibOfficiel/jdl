@@ -1,5 +1,5 @@
-import type { ClientPlayer } from '@/types/colyseus';
 import type { GamePlayerRecord, SipEventRecord } from '@/lib/statsApi';
+import type { ClientPlayer } from '@/types/colyseus';
 
 export interface Badge {
   code: string;
@@ -9,13 +9,38 @@ export interface Badge {
 }
 
 export const BADGE_CATALOG: ReadonlyArray<Badge> = [
-  { code: 'champion', emoji: '🏆', label: 'Champion', description: "A gagné la partie." },
-  { code: 'soiffard', emoji: '🍻', label: 'Soiffard', description: 'Le plus de gorgées bues de la soirée.' },
-  { code: 'genereux', emoji: '🎁', label: 'Généreux', description: 'Le plus de gorgées distribuées.' },
-  { code: 'athlete', emoji: '💪', label: 'Athlète', description: "Le plus d'unités d'effort en équivalence." },
+  { code: 'champion', emoji: '🏆', label: 'Champion', description: 'A gagné la partie.' },
+  {
+    code: 'soiffard',
+    emoji: '🍻',
+    label: 'Soiffard',
+    description: 'Le plus de gorgées bues de la soirée.',
+  },
+  {
+    code: 'genereux',
+    emoji: '🎁',
+    label: 'Généreux',
+    description: 'Le plus de gorgées distribuées.',
+  },
+  {
+    code: 'athlete',
+    emoji: '💪',
+    label: 'Athlète',
+    description: "Le plus d'unités d'effort en équivalence.",
+  },
   { code: 'sage', emoji: '💧', label: 'Sage', description: 'Aucun soft cap déclenché.' },
-  { code: 'phenix', emoji: '🔥', label: 'Phénix', description: 'Comeback dans le top 3 depuis la dernière place.' },
-  { code: 'bromancien', emoji: '💞', label: 'Bromancien', description: 'A eu une bromance la partie.' },
+  {
+    code: 'phenix',
+    emoji: '🔥',
+    label: 'Phénix',
+    description: 'Comeback dans le top 3 depuis la dernière place.',
+  },
+  {
+    code: 'bromancien',
+    emoji: '💞',
+    label: 'Bromancien',
+    description: 'A eu une bromance la partie.',
+  },
   { code: 'rouleur', emoji: '🎲', label: 'Rouleur', description: 'Le plus de dés lancés.' },
 ];
 

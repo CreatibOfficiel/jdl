@@ -2,6 +2,7 @@ import type { Client } from 'colyseus';
 import type { GameRoom } from '../../rooms/GameRoom';
 import { pushEvent } from '../eventLog';
 import { hasItem, removeItem } from '../inventoryManager';
+import { applyDrink } from '../sipsHelper';
 
 interface UseItemMessage {
   itemType: string;
@@ -20,10 +21,18 @@ export function handleUseItem(room: GameRoom, client: Client, message: UseItemMe
       const target = room.state.players.get(message.targetPlayerId);
       if (!target?.connected) return;
       removeItem(player, 'malus_point');
+      const sips = room.state.ptMalusSips;
+      applyDrink(room, {
+        player: target,
+        sips,
+        emoji: '💣',
+        kind: 'pt_malus',
+        reason: `Pt malus de ${player.name}`,
+      });
       pushEvent(room.state, {
         playerId: player.id,
         kind: 'use_malus',
-        text: `💣 ${player.name} balance un Pt malus à ${target.name} → ${room.state.ptMalusSips} gorgées !`,
+        text: `💣 ${player.name} balance un Pt malus à ${target.name} → ${sips} gorgées !`,
         importance: 'high',
       });
       return;

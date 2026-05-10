@@ -1,4 +1,4 @@
-export const VIEWBOX_SIZE = 400;
+export const VIEWBOX_SIZE = 600;
 export const CENTER = VIEWBOX_SIZE / 2;
 
 interface Ring {
@@ -8,9 +8,9 @@ interface Ring {
   endCase: number;
 }
 
-const RING_OUTER: Ring = { innerRadius: 130, outerRadius: 190, startCase: 1, endCase: 27 };
-const RING_MIDDLE: Ring = { innerRadius: 75, outerRadius: 130, startCase: 28, endCase: 55 };
-const RING_INNER: Ring = { innerRadius: 25, outerRadius: 75, startCase: 56, endCase: 63 };
+const RING_OUTER: Ring = { innerRadius: 195, outerRadius: 285, startCase: 1, endCase: 27 };
+const RING_MIDDLE: Ring = { innerRadius: 112, outerRadius: 195, startCase: 28, endCase: 55 };
+const RING_INNER: Ring = { innerRadius: 37, outerRadius: 112, startCase: 56, endCase: 63 };
 
 const RINGS: ReadonlyArray<Ring> = [RING_OUTER, RING_MIDDLE, RING_INNER];
 

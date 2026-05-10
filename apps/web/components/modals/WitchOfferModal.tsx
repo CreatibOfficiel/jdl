@@ -50,7 +50,7 @@ export function WitchOfferModal({
           transition={{ duration: 0.2 }}
         >
           <motion.div
-            className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl"
+            className="w-full max-w-md rounded-2xl bg-white dark:bg-zinc-800 p-5 shadow-xl"
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -58,7 +58,7 @@ export function WitchOfferModal({
           >
             <header className="mb-3">
               <h2 className="text-2xl font-bold">🧪 Offrir une potion</h2>
-              <p className="mt-1 text-sm text-zinc-600">
+              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                 {step === 'pick'
                   ? 'À qui ? La cible aura 10s pour dire merci, sinon double dose.'
                   : `Combien de gorgées pour ${target?.name} ?`}
@@ -77,7 +77,7 @@ export function WitchOfferModal({
                           setTarget(p);
                           setStep('sips');
                         }}
-                        className="flex w-full items-center gap-3 rounded-xl border-2 border-zinc-200 bg-white px-3 py-3 text-left transition hover:border-purple-400 hover:bg-purple-50"
+                        className="flex w-full items-center gap-3 rounded-xl border-2 border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 dark:border-zinc-700 dark:bg-zinc-800 px-3 py-3 text-left transition hover:border-purple-400 hover:bg-purple-50 dark:bg-purple-950/30"
                       >
                         <span
                           className="flex h-9 w-9 items-center justify-center rounded-full"
@@ -86,7 +86,9 @@ export function WitchOfferModal({
                         >
                           {p.emoji}
                         </span>
-                        <span className="font-medium text-zinc-900">{p.name}</span>
+                        <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                          {p.name}
+                        </span>
                       </button>
                     </li>
                   );
@@ -96,10 +98,12 @@ export function WitchOfferModal({
 
             {step === 'sips' && target && (
               <div>
-                <div className="rounded-xl bg-purple-50 p-4 text-center">
+                <div className="rounded-xl bg-purple-50 dark:bg-purple-950/30 p-4 text-center">
                   <p className="text-5xl">🧪</p>
-                  <p className="mt-2 text-3xl font-bold text-purple-900">{sips}</p>
-                  <p className="text-sm text-zinc-600">gorgées</p>
+                  <p className="mt-2 text-3xl font-bold text-purple-900 dark:text-purple-300">
+                    {sips}
+                  </p>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">gorgées</p>
                 </div>
                 <input
                   type="range"
@@ -113,7 +117,7 @@ export function WitchOfferModal({
                   <button
                     type="button"
                     onClick={() => setStep('pick')}
-                    className="flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
+                    className="flex-1 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 dark:border-zinc-600 dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 dark:bg-zinc-900"
                   >
                     ← Retour
                   </button>
@@ -134,7 +138,7 @@ export function WitchOfferModal({
             <button
               type="button"
               onClick={handleClose}
-              className="mt-3 w-full rounded-lg border border-zinc-300 bg-white px-4 py-2 text-xs text-zinc-500 hover:bg-zinc-50"
+              className="mt-3 w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 dark:border-zinc-600 dark:bg-zinc-800 px-4 py-2 text-xs text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-700 dark:bg-zinc-900"
             >
               Annuler
             </button>

@@ -10,11 +10,12 @@ interface UseSoundsResult {
 }
 
 export function useSounds(): UseSoundsResult {
-  const [muted, setMutedState] = useState(false);
+  const [muted, setMutedState] = useState(() => isMuted());
 
   useEffect(() => {
     preloadSounds();
-    setMutedState(isMuted());
+    const id = setInterval(() => setMutedState(isMuted()), 500);
+    return () => clearInterval(id);
   }, []);
 
   return {

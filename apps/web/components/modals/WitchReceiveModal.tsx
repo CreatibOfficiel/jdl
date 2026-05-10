@@ -48,7 +48,7 @@ export function WitchReceiveModal({
           transition={{ duration: 0.2 }}
         >
           <motion.div
-            className="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl"
+            className="w-full max-w-md rounded-2xl bg-white dark:bg-zinc-800 p-5 shadow-2xl"
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -59,7 +59,7 @@ export function WitchReceiveModal({
               <h2 className="mt-2 text-xl font-bold">
                 {isMe ? `${offererName} t'offre une potion !` : `${offererName} → ${targetName}`}
               </h2>
-              <p className="mt-1 text-sm text-zinc-600">
+              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                 {sips} gorgée(s){' '}
                 {isMe ? '— dis MERCI sinon tu doubles !' : `— ${targetName} a 10s pour dire merci`}
               </p>
@@ -88,7 +88,9 @@ export function WitchReceiveModal({
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-2xl font-bold text-purple-900">{seconds}</span>
+                  <span className="text-2xl font-bold text-purple-900 dark:text-purple-300">
+                    {seconds}
+                  </span>
                 </div>
               </div>
             </div>
@@ -103,7 +105,9 @@ export function WitchReceiveModal({
               </button>
             )}
             {!isMe && (
-              <p className="text-center text-sm italic text-zinc-500">{targetName} doit décider…</p>
+              <p className="text-center text-sm italic text-zinc-500 dark:text-zinc-400">
+                {targetName} doit décider…
+              </p>
             )}
           </motion.div>
         </motion.div>

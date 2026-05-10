@@ -9,10 +9,7 @@ interface ReactionFountainProps {
 
 export function ReactionFountain({ reactions }: ReactionFountainProps) {
   return (
-    <div
-      className="pointer-events-none fixed inset-0 z-30 overflow-hidden"
-      aria-hidden="true"
-    >
+    <div className="pointer-events-none fixed inset-0 z-30 overflow-hidden" aria-hidden="true">
       <AnimatePresence>
         {reactions.map((r) => (
           <motion.div

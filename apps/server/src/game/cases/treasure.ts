@@ -3,6 +3,7 @@ import type { GameRoom } from '../../rooms/GameRoom';
 import type { Player } from '../../schemas/Player';
 import { pushEvent } from '../eventLog';
 import { addItem, hasItem, removeItem } from '../inventoryManager';
+import { applyDrink } from '../sipsHelper';
 import { endTurn } from '../turnHandler';
 
 const BROADCAST_SIPS = 3;
@@ -67,6 +68,17 @@ export function handleOpenTreasure(room: GameRoom, client: Client): void {
       text: `🍻 Cadeau ! Tout le monde boit ${BROADCAST_SIPS} gorgées (gracieuseté de ${player.name})`,
       importance: 'high',
     });
+    for (const p of room.state.players.values()) {
+      if (p.connected && !p.exited) {
+        applyDrink(room, {
+          player: p,
+          sips: BROADCAST_SIPS,
+          emoji: '🍻',
+          kind: 'treasure_broadcast',
+          reason: `cadeau de ${player.name}`,
+        });
+      }
+    }
     closeTreasureModal(room);
     endTurn(room);
     return;
@@ -105,7 +117,7 @@ export function handleSwapPosition(room: GameRoom, client: Client, message: Swap
 
   const player = room.state.players.get(client.sessionId);
   const target = room.state.players.get(message.targetPlayerId);
-  if (!player || !target?.connected || player.id === target.id) return;
+  if (!player || !target?.connected || target.exited || player.id === target.id) return;
 
   const oldPos = player.position;
   player.position = target.position;
