@@ -60,7 +60,9 @@ function applySoftCap(room: GameRoom, player: Player, sips: number, source: stri
   const policy: CapPolicy = CAP_POLICY_BY_SOURCE[source] ?? 'halve';
   if (policy === 'skip') return { sips, forceEquivalence: false };
 
-  const level = isDifficultyLevel(room.state.difficultyLevel) ? room.state.difficultyLevel : 'medium';
+  const level = isDifficultyLevel(room.state.difficultyLevel)
+    ? room.state.difficultyLevel
+    : 'medium';
   const caps = SAFETY_BY_DIFFICULTY[level];
   const now = Date.now();
   decayWindow(player, now);
@@ -176,7 +178,8 @@ function sourceCategory(source: string): string {
   if (source === 'rail_drink') return 'rail';
   if (source === 'pt_malus') return 'pt_malus';
   if (source === 'pill_red' || source === 'pill_blue') return 'pills';
-  if (source === 'red_drink' || source === 'card_mismatch' || source === 'bromance_drink') return 'card';
+  if (source === 'red_drink' || source === 'card_mismatch' || source === 'bromance_drink')
+    return 'card';
   return 'card';
 }
 
@@ -301,23 +304,4 @@ export function applyDrink(room: GameRoom, args: ApplyDrinkArgs): void {
       );
     }
   }
-}
-
-/** Pushes "X distribue N gorgées" without bromance (giver doesn't drink). */
-export function applyDistribute(
-  room: GameRoom,
-  player: Player,
-  sips: number,
-  emoji: string,
-  kind: string,
-  reason?: string,
-): void {
-  pushEvent(room.state, {
-    playerId: player.id,
-    kind,
-    text: `${emoji} ${player.name} distribue ${sips} gorgée(s)${reason ? ` (${reason})` : ''}`,
-    importance: 'normal',
-  });
-  player.sipsGiven += sips;
-  recordSip(room, { fromId: player.id, toId: '', count: sips, source: kind });
 }

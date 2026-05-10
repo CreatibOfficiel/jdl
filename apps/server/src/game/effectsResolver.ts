@@ -4,7 +4,7 @@ import type { BoardCaseSchema } from '../schemas/BoardCaseSchema';
 import type { Player } from '../schemas/Player';
 import { startRailDeBus } from './cases/railDeBus';
 import { pushEvent } from './eventLog';
-import { applyDistribute, applyDrink } from './sipsHelper';
+import { applyDrink } from './sipsHelper';
 
 const PHASE4_PENDING: Record<string, { emoji: string; label: string }> = {};
 
@@ -57,12 +57,28 @@ export function resolveCaseEffect(room: GameRoom, player: Player): void {
           reason: 'zone soif',
         });
       } else {
-        applyDistribute(room, player, caseData.numberValue, '🎁', 'red_distribute');
+        room.state.activeModal = 'distribute';
+        room.state.activeModalPlayerId = player.id;
+        room.state.distributeExpectedSips = caseData.numberValue;
+        pushEvent(room.state, {
+          playerId: player.id,
+          kind: 'red_distribute_open',
+          text: `🎁 ${player.name} doit distribuer ${caseData.numberValue} gorgée(s)`,
+          importance: 'high',
+        });
       }
       return;
 
     case 'green_number':
-      applyDistribute(room, player, caseData.numberValue, '🎁', 'green_distribute');
+      room.state.activeModal = 'distribute';
+      room.state.activeModalPlayerId = player.id;
+      room.state.distributeExpectedSips = caseData.numberValue;
+      pushEvent(room.state, {
+        playerId: player.id,
+        kind: 'green_distribute_open',
+        text: `🎁 ${player.name} doit distribuer ${caseData.numberValue} gorgée(s)`,
+        importance: 'high',
+      });
       return;
 
     case 'formule1':
@@ -92,7 +108,15 @@ export function resolveCaseEffect(room: GameRoom, player: Player): void {
       const sips = room.state.sipsPerCard;
       const symbol = SUIT_SYMBOL[caseData.caseType] ?? '?';
       if (caseData.caseType === player.suit) {
-        applyDistribute(room, player, sips, symbol, 'card_match', 'son signe');
+        room.state.activeModal = 'distribute';
+        room.state.activeModalPlayerId = player.id;
+        room.state.distributeExpectedSips = sips;
+        pushEvent(room.state, {
+          playerId: player.id,
+          kind: 'card_match_open',
+          text: `${symbol} ${player.name} distribue ${sips} gorgée(s) (son signe)`,
+          importance: 'high',
+        });
       } else {
         applyDrink(room, {
           player,

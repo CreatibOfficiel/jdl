@@ -28,6 +28,8 @@ export interface ClientPlayer {
   autoSwapsTriggered: number;
   exited: boolean;
   exitedAt: number;
+  ready: boolean;
+  pendingDrinkConfirm: number;
 }
 
 export interface ClientSipEvent {
@@ -87,6 +89,7 @@ export interface ClientGameState {
   winnerId: string;
   activeModal: string;
   activeModalPlayerId: string;
+  distributeExpectedSips: number;
   witchOffererId: string;
   witchSips: number;
   witchDeadline: number;
@@ -103,4 +106,5 @@ export interface ClientGameState {
   totalHydrationPrompts: number;
   maxSipsPerPlayerPerGame: number;
   checklistAcked: boolean;
+  lobbyPin: string;
 }

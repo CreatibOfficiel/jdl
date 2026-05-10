@@ -42,4 +42,7 @@ export class Player extends Schema {
   @type('boolean') exited: boolean = false;
   /** Timestamp of exit, for post-game stats. */
   @type('number') exitedAt: number = 0;
+  /** Player has signalled they're ready to start. */
+  @type('boolean') ready: boolean = false;
+  @type('number') pendingDrinkConfirm: number = 0;
 }

@@ -20,6 +20,7 @@ export class GameState extends Schema {
   @type('string') winnerId: string = '';
   @type('string') activeModal: string = '';
   @type('string') activeModalPlayerId: string = '';
+  @type('number') distributeExpectedSips: number = 0;
   @type('string') witchOffererId: string = '';
   @type('number') witchSips: number = 0;
   @type('number') witchDeadline: number = 0;
@@ -47,4 +48,6 @@ export class GameState extends Schema {
   @type('number') maxSipsPerPlayerPerGame: number = 0;
   /** Host has acked the pre-game checklist (water / snacks / age / exit). Gates start_game. */
   @type('boolean') checklistAcked: boolean = false;
+  /** 4-digit PIN set by host to restrict lobby access. Empty string = no PIN. */
+  @type('string') lobbyPin: string = '';
 }

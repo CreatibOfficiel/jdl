@@ -4,18 +4,23 @@ import { isValidGameCode, normalizeGameCode } from '@jeu-soiree/shared';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { loadAppearance } from '@/components/AppearanceToggle';
 import { Board } from '@/components/board/Board';
+import { EffectBanner } from '@/components/board/EffectBanner';
 import { Dice3D } from '@/components/dice/Dice3D';
 import { ConnectionStatus } from '@/components/game/ConnectionStatus';
 import { EventLog } from '@/components/game/EventLog';
 import { FinishedView } from '@/components/game/FinishedView';
-import { GameSkeleton } from '@/components/game/GameSkeleton';
 import { Inventory } from '@/components/game/Inventory';
 import { MuteToggle } from '@/components/game/MuteToggle';
 import { PlayersBar } from '@/components/game/PlayersBar';
 import { ReactionBar } from '@/components/game/ReactionBar';
 import { StatsPanel } from '@/components/game/StatsPanel';
+import { ModalEcho } from '@/components/master/ModalEcho';
+import { ReactionFountain } from '@/components/master/ReactionFountain';
 import { BromanceModal } from '@/components/modals/BromanceModal';
+import { DistributeModal } from '@/components/modals/DistributeModal';
+import { DrinkConfirmModal } from '@/components/modals/DrinkConfirmModal';
 import { EquivalenceTaskModal } from '@/components/modals/EquivalenceTaskModal';
 import { LoadedDieModal } from '@/components/modals/LoadedDieModal';
 import { PilulesModal } from '@/components/modals/PilulesModal';
@@ -25,11 +30,11 @@ import { ShopModal } from '@/components/modals/ShopModal';
 import { TreasureModal } from '@/components/modals/TreasureModal';
 import { WitchOfferModal } from '@/components/modals/WitchOfferModal';
 import { WitchReceiveModal } from '@/components/modals/WitchReceiveModal';
-import { ModalEcho } from '@/components/master/ModalEcho';
-import { loadAppearance } from '@/components/AppearanceToggle';
+import { Spinner } from '@/components/ui/Spinner';
 import { useColyseusRoom } from '@/hooks/useColyseusRoom';
 import { useEquivalenceQueue } from '@/hooks/useEquivalenceQueue';
 import { useModalEcho } from '@/hooks/useModalEcho';
+import { useReactions } from '@/hooks/useReactions';
 import { useSounds } from '@/hooks/useSounds';
 import { colyseusStateToBoard } from '@/lib/colyseusToBoard';
 import type { ClientGameState, ClientPlayer, ClientSipEvent } from '@/types/colyseus';
@@ -38,9 +43,6 @@ interface GameClientProps {
   code: string;
   initialProfile: {
     name?: string;
-    suit?: string;
-    color?: string;
-    emoji?: string;
   };
 }
 
@@ -48,34 +50,27 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
   const router = useRouter();
   const normalized = normalizeGameCode(code);
   const validCode = isValidGameCode(normalized);
-  const profileComplete = Boolean(
-    initialProfile.name && initialProfile.suit && initialProfile.color && initialProfile.emoji,
-  );
+  const hasName = Boolean(initialProfile.name?.trim());
 
   const options = useMemo(
     () => ({
       code: normalized,
       name: initialProfile.name ?? '',
-      suit: initialProfile.suit ?? '',
-      color: initialProfile.color ?? '',
-      emoji: initialProfile.emoji ?? '',
+      suit: '',
+      color: '',
+      emoji: '',
     }),
-    [
-      normalized,
-      initialProfile.name,
-      initialProfile.suit,
-      initialProfile.color,
-      initialProfile.emoji,
-    ],
+    [normalized, initialProfile.name],
   );
 
   const { state, status, error, room } = useColyseusRoom<ClientGameState>(
     'game_room',
     options,
-    validCode && profileComplete,
+    validCode && hasName,
   );
 
   const [hasRolledOrder, setHasRolledOrder] = useState(false);
+  const reactions = useReactions(room ?? null);
   const [pickItemType, setPickItemType] = useState<string | null>(null);
   const [witchOfferOpen, setWitchOfferOpen] = useState(false);
   const [loadedDieOpen, setLoadedDieOpen] = useState(false);
@@ -86,13 +81,11 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
     setEchoesEnabled(loadAppearance().playerEchoes);
   }, []);
 
-  // Reset hasRolledOrder when phase moves on
   useEffect(() => {
     if (state?.phase !== 'rolling_order') setHasRolledOrder(false);
     if (state?.phase === 'finished') sounds.play('victory', 0.6);
   }, [state?.phase, sounds]);
 
-  // Modal-open sound effect — fires on each new modal transition.
   const lastModalRef = useRef('');
   useEffect(() => {
     const cur = state?.activeModal ?? '';
@@ -100,68 +93,24 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
     lastModalRef.current = cur;
   }, [state?.activeModal, sounds]);
 
-  // Redirect back to lobby if phase reverts
   useEffect(() => {
     if (state?.phase === 'lobby') {
-      const params = new URLSearchParams({
-        name: initialProfile.name ?? '',
-        suit: initialProfile.suit ?? '',
-        color: initialProfile.color ?? '',
-        emoji: initialProfile.emoji ?? '',
-      });
+      const params = new URLSearchParams({ name: initialProfile.name ?? '' });
       router.replace(`/lobby/${normalized}?${params.toString()}`);
     }
-  }, [state?.phase, normalized, initialProfile, router]);
-
-  if (!validCode) {
-    return (
-      <main className="mx-auto max-w-md px-6 py-16">
-        <h1 className="text-2xl font-bold">Code invalide</h1>
-        <Link href="/" className="mt-4 inline-block text-blue-600 underline">
-          Retour à l'accueil
-        </Link>
-      </main>
-    );
-  }
-  if (!profileComplete) {
-    return (
-      <main className="mx-auto max-w-md px-6 py-16">
-        <h1 className="text-2xl font-bold">Profil manquant</h1>
-        <Link href="/" className="mt-4 inline-block text-blue-600 underline">
-          Retour à l'accueil
-        </Link>
-      </main>
-    );
-  }
-
-  if (status === 'connecting' || status === 'idle') {
-    return <GameSkeleton message={`Connexion à la partie ${normalized}…`} />;
-  }
-  if (status === 'error') {
-    return (
-      <main className="mx-auto max-w-md px-6 py-16">
-        <h1 className="text-2xl font-bold">Erreur</h1>
-        <p className="mt-2 text-red-700">{error}</p>
-        <Link href="/" className="mt-4 inline-block text-blue-600 underline">
-          Retour à l'accueil
-        </Link>
-      </main>
-    );
-  }
-  if (!state || !room) {
-    return <GameSkeleton message="Chargement du state…" />;
-  }
-
-  const me = state.players.get(room.sessionId);
-  const board = colyseusStateToBoard(state);
+  }, [state?.phase, normalized, initialProfile.name, router]);
 
   const sipEventsArr = useMemo(() => {
+    if (!state?.sipEvents) return [];
     const arr: ClientSipEvent[] = [];
-    state.sipEvents.forEach((e) => arr.push(e));
+    state.sipEvents.forEach((e) => {
+      arr.push(e);
+    });
     return arr;
-  }, [state.sipEvents, state.sipEventsTotalCount]);
+  }, [state?.sipEvents, state?.sipEventsTotalCount]);
 
   const eventLogArr = useMemo(() => {
+    if (!state?.eventLog) return [];
     const out: Array<{
       id: string;
       text: string;
@@ -181,9 +130,117 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
       });
     });
     return out;
-  }, [state.eventLog]);
+  }, [state?.eventLog]);
   const echo = useModalEcho(echoesEnabled ? eventLogArr : []);
-  const equivQueue = useEquivalenceQueue(sipEventsArr, room.sessionId, normalized);
+  const equivQueue = useEquivalenceQueue(
+    sipEventsArr,
+    room?.sessionId ?? '',
+    normalized,
+    state?.phase,
+  );
+
+  const [highlightCase, setHighlightCase] = useState<{
+    index: number;
+    color: 'red' | 'blue' | 'green' | 'gold';
+  } | null>(null);
+  const [bannerEvents, setBannerEvents] = useState<Array<{ id: string; text: string }>>([]);
+
+  const prevEventCountRef = useRef(0);
+  useEffect(() => {
+    if (!state || eventLogArr.length <= prevEventCountRef.current) {
+      prevEventCountRef.current = eventLogArr.length;
+      return;
+    }
+    const newEvents = eventLogArr.slice(prevEventCountRef.current);
+    prevEventCountRef.current = eventLogArr.length;
+    const actionKinds: Record<string, 'red' | 'blue' | 'green' | 'gold'> = {
+      prison_caught: 'red',
+      hole_caught: 'red',
+      red_drink: 'red',
+      teleport: 'blue',
+      portal: 'blue',
+      usain: 'green',
+      formule1: 'green',
+      card_match: 'gold',
+      card_mismatch: 'gold',
+      shop_open: 'gold',
+      bromance_open: 'gold',
+      pill_open: 'gold',
+      witch_potion_get: 'gold',
+    };
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    for (const ev of newEvents) {
+      const color = actionKinds[ev.kind];
+      if (!color) continue;
+      const player = ev.playerId ? state.players.get(ev.playerId) : null;
+      if (!player) continue;
+      setHighlightCase({ index: player.position, color });
+      setBannerEvents((prev) => [...prev.slice(-1), { id: ev.id, text: ev.text }]);
+      timeoutId = setTimeout(() => setHighlightCase(null), 2400);
+      break;
+    }
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [eventLogArr, state]);
+
+  if (!validCode) {
+    return (
+      <main className="mx-auto max-w-md px-6 py-16">
+        <h1 className="text-2xl font-bold">Code invalide</h1>
+        <Link href="/" className="mt-4 inline-block text-blue-600 underline">
+          Retour à l'accueil
+        </Link>
+      </main>
+    );
+  }
+
+  if (!hasName) {
+    return (
+      <main className="mx-auto max-w-md px-6 py-16">
+        <h1 className="text-2xl font-bold">Pseudo manquant</h1>
+        <Link href="/" className="mt-4 inline-block text-blue-600 underline">
+          Retour à l'accueil
+        </Link>
+      </main>
+    );
+  }
+
+  if (status === 'connecting' || status === 'idle') {
+    return (
+      <main className="mx-auto max-w-md px-6 py-16">
+        <div className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
+          <Spinner />
+          <span>Connexion à la partie {normalized}…</span>
+        </div>
+      </main>
+    );
+  }
+  if (status === 'error') {
+    return (
+      <main className="mx-auto max-w-md px-6 py-16">
+        <h1 className="text-2xl font-bold">Erreur</h1>
+        <p className="mt-2 text-red-700 dark:text-red-400">{error}</p>
+        <Link href="/" className="mt-4 inline-block text-blue-600 underline">
+          Retour à l'accueil
+        </Link>
+      </main>
+    );
+  }
+  if (!state || !room || !state.players) {
+    return (
+      <main className="mx-auto max-w-md px-6 py-16">
+        <div className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
+          <Spinner />
+          <span>Chargement du state…</span>
+        </div>
+      </main>
+    );
+  }
+
+  const me = state.players.get(room.sessionId);
+  const board = colyseusStateToBoard(state);
+
   const turnOrderArray: string[] = [];
   state.turnOrder.forEach((id) => {
     turnOrderArray.push(id);
@@ -195,6 +252,7 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
     playersList.push(p);
   });
   const activePlayerName = activeId ? (state.players.get(activeId)?.name ?? '?') : '?';
+  const activePlayerEmoji = activeId ? (state.players.get(activeId)?.emoji ?? '') : '';
   const isMyModal = state.activeModalPlayerId === room.sessionId;
 
   function handleRollOrder() {
@@ -217,21 +275,31 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
 
   function handleIamDone() {
     if (!room) return;
-    if (!confirm('Te mettre en pause pour la fin de la partie ? Tu seras passé(e) à chaque tour.')) return;
+    if (!confirm('Te mettre en pause pour la fin de la partie ? Tu seras passé(e) à chaque tour.'))
+      return;
     room.send('i_am_done');
   }
   const meExited = me?.exited ?? false;
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-4">
+      <ReactionFountain reactions={reactions} />
       <ConnectionStatus status={status} error={error} />
       <header className="mb-3 flex items-baseline justify-between gap-4">
         <h1 className="font-mono text-xl font-bold text-blue-600">{state.boardSeed}</h1>
         <div className="flex items-center gap-2">
+          <Link
+            href="/rules"
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-1 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700"
+          >
+            📖
+          </Link>
           <button
             type="button"
             onClick={() => setStatsOpen(true)}
-            className="rounded-lg border border-zinc-300 bg-white px-3 py-1 text-xs text-zinc-700 hover:bg-zinc-50"
+            className="rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-1 text-xs text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700"
             aria-label="Ouvrir les stats"
             title="Stats live"
           >
@@ -241,14 +309,17 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
             <button
               type="button"
               onClick={handleIamDone}
-              className="rounded-lg border border-zinc-300 bg-white px-3 py-1 text-xs text-zinc-700 hover:bg-zinc-50"
+              className="rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-1 text-xs text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700"
               title="Je passe pour la fin de la partie"
             >
               🪑 Je passe
             </button>
           )}
           {meExited && (
-            <span className="rounded-lg bg-zinc-100 px-3 py-1 text-xs text-zinc-500" title="Tu es en pause">
+            <span
+              className="rounded-lg bg-zinc-100 dark:bg-zinc-800 px-3 py-1 text-xs text-zinc-500 dark:text-zinc-400"
+              title="Tu es en pause"
+            >
               🪑 En pause
             </span>
           )}
@@ -256,7 +327,7 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
           <button
             type="button"
             onClick={handleLeave}
-            className="rounded-lg border border-zinc-300 bg-white px-3 py-1 text-xs text-zinc-700 hover:bg-zinc-50"
+            className="rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 px-3 py-1 text-xs text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700"
           >
             Quitter
           </button>
@@ -280,8 +351,15 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
       />
 
       <div className="my-3 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
-        <div className="aspect-square w-full max-w-2xl">
-          <Board board={board} players={playersList} activeId={activeId} />
+        <div className="aspect-square w-full max-w-2xl relative">
+          <EffectBanner events={bannerEvents} />
+          <Board
+            board={board}
+            players={playersList}
+            activeId={activeId}
+            highlightCaseIndex={highlightCase?.index}
+            highlightColor={highlightCase?.color}
+          />
         </div>
 
         <aside className="space-y-3">
@@ -314,8 +392,8 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
           )}
 
           {me && me.inventory.length > 0 && (
-            <section className="rounded-2xl border border-zinc-200 bg-white p-3">
-              <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            <section className="rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-3">
+              <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                 Inventaire
               </h2>
               <Inventory
@@ -335,8 +413,8 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
             </section>
           )}
 
-          <section className="rounded-2xl border border-zinc-200 bg-white p-3">
-            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+          <section className="rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-3">
+            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
               Event log
             </h2>
             <EventLog events={state.eventLog} />
@@ -442,6 +520,39 @@ export function GameClient({ code, initialProfile }: GameClientProps) {
         round={state.railRound}
         onAnswer={(answer) => room.send('rail_de_bus_answer', { round: state.railRound, answer })}
       />
+
+      {state.activeModal === 'distribute' && (
+        <DistributeModal
+          open
+          isMyTurn={isMyModal}
+          totalSips={state.distributeExpectedSips}
+          meId={room.sessionId}
+          candidates={playersList}
+          onDistribute={(assignments) => {
+            room.send('distribute_sips', { assignments });
+          }}
+        />
+      )}
+
+      {state.activeModal === 'distribute_wait' && isMyModal && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-5 text-center dark:bg-zinc-800">
+            <p className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
+              En attente des confirmations...
+            </p>
+          </div>
+        </div>
+      )}
+
+      {state.activeModal === 'distribute_wait' && me && me.pendingDrinkConfirm > 0 && (
+        <DrinkConfirmModal
+          open
+          sips={me.pendingDrinkConfirm}
+          fromName={activePlayerName}
+          fromEmoji={activePlayerEmoji}
+          onConfirm={() => room.send('confirm_drink')}
+        />
+      )}
     </main>
   );
 }
@@ -464,14 +575,16 @@ function RollingOrderPanel({ state, hasRolled, onRoll }: RollingOrderPanelProps)
   });
 
   return (
-    <section className="rounded-2xl border border-zinc-200 bg-white p-4">
-      <h2 className="text-base font-semibold text-zinc-700">Ordre de jeu</h2>
-      <p className="mt-1 text-sm text-zinc-500">Chacun lance le dé. Le plus grand commence.</p>
+    <section className="rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4">
+      <h2 className="text-base font-semibold text-zinc-700 dark:text-zinc-300">Ordre de jeu</h2>
+      <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+        Chacun lance le dé. Le plus grand commence.
+      </p>
       <ul className="mt-3 space-y-1 text-sm">
         {rolls.map((r) => (
           <li key={r.id} className="flex items-center justify-between">
-            <span className="text-zinc-700">{r.name}</span>
-            <span className="font-mono text-zinc-500">
+            <span className="text-zinc-700 dark:text-zinc-300">{r.name}</span>
+            <span className="font-mono text-zinc-500 dark:text-zinc-400">
               {r.rolled ? `🎲 ${r.roll}` : '…en attente'}
             </span>
           </li>
@@ -481,7 +594,7 @@ function RollingOrderPanel({ state, hasRolled, onRoll }: RollingOrderPanelProps)
         type="button"
         onClick={onRoll}
         disabled={hasRolled}
-        className="mt-4 w-full rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-zinc-300"
+        className="mt-4 w-full rounded-lg bg-blue-600 dark:bg-blue-500 px-4 py-3 font-semibold text-white transition hover:bg-blue-700 dark:hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-zinc-300"
       >
         {hasRolled ? 'Dé lancé — en attente des autres' : '🎲 Lancer mon dé'}
       </button>
@@ -507,21 +620,23 @@ function PlayingPanel({
   onRoll,
 }: PlayingPanelProps) {
   return (
-    <section className="rounded-2xl border border-zinc-200 bg-white p-4">
-      <p className="text-sm text-zinc-500">
-        {isMyTurn ? `${meName}, à toi !` : `Tour de ${activeName ?? '…'}`}
-      </p>
-      <div className="mt-3 flex items-center justify-center py-2">
-        <Dice3D value={lastDice} rollKey={rollKey} size={96} />
-      </div>
-      <button
-        type="button"
-        onClick={onRoll}
-        disabled={!isMyTurn}
-        className="mt-2 w-full rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-zinc-300"
-      >
-        {isMyTurn ? 'Lancer le dé' : 'Pas ton tour'}
-      </button>
-    </section>
+    <div className="sticky bottom-0 z-20 lg:static lg:z-auto bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-700 lg:border-t-0 lg:border-0 lg:bg-transparent lg:dark:bg-transparent px-4 py-3">
+      <section className="rounded-2xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4">
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          {isMyTurn ? `${meName}, à toi !` : `Tour de ${activeName ?? '…'}`}
+        </p>
+        <div className="mt-3 flex items-center justify-center py-2">
+          <Dice3D value={lastDice} rollKey={rollKey} size={96} />
+        </div>
+        <button
+          type="button"
+          onClick={onRoll}
+          disabled={!isMyTurn}
+          className="mt-2 w-full rounded-lg bg-blue-600 dark:bg-blue-500 px-4 py-3 font-semibold text-white transition hover:bg-blue-700 dark:hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-zinc-300"
+        >
+          {isMyTurn ? 'Lancer le dé' : 'Pas ton tour'}
+        </button>
+      </section>
+    </div>
   );
 }
